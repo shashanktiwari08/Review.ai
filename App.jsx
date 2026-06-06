@@ -1384,7 +1384,7 @@ export default function App() {
                       >
                         <strong style={{ fontSize: '16px', display: 'block' }}>Basic Growth Plan</strong>
                         <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
-                          ₹3,999 / month • 1 Location • 200 scans limit • Standard support
+                          ₹3,999 / month • 1 Location • 100 scans limit • Standard support
                         </span>
                       </div>
 
@@ -2069,7 +2069,7 @@ export default function App() {
                   </div>
                   <ul className="pricing-features">
                     <li>1 Business Location</li>
-                    <li>Up to 200 QR Code Scans/mo</li>
+                    <li>Up to 100 QR Code Scans/mo</li>
                     <li>10 Preset Keyword Tags</li>
                     <li>Private Gating feedback protection</li>
                     <li>Printable QR Code Flyer download</li>
@@ -2119,6 +2119,35 @@ export default function App() {
                   <button className="btn btn-primary" style={{ marginTop: '16px' }} onClick={() => setView('landing')}>
                     Go to Homepage
                   </button>
+                </div>
+              </div>
+            )
+          }
+
+          const owner = dbUsers.find(u => u.id === biz.userId)
+          const isBasicPlan = owner?.plan === 'starter'
+          const bizScans = dbScans.filter(s => s.businessId === biz.id)
+          const bizReviews = dbReviews.filter(r => r.businessId === biz.id)
+          const isLimitReached = isBasicPlan && (bizScans.length >= 100 || bizReviews.length >= 100)
+
+          if (isLimitReached) {
+            return (
+              <div className="customer-portal-bg">
+                <div className="card customer-portal-card" style={{ textAlign: 'center', padding: '40px 24px' }}>
+                  <div style={{ fontSize: '48px', marginBottom: '16px' }}>🔒</div>
+                  <h3 style={{ fontSize: '20px', fontWeight: 600, color: 'var(--text-primary)' }}>Scan Limit Exceeded</h3>
+                  <p style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: '1.5', margin: '12px 0 24px 0' }}>
+                    This business has reached the monthly limit of 100 scans/reviews allowed on their Basic Plan. The review portal will be unlocked on the next billing date.
+                  </p>
+                  {currentUser && currentUser.id === biz.userId ? (
+                    <button className="btn btn-primary" style={{ width: '100%' }} onClick={() => setView('dashboard')}>
+                      Go to Dashboard & Upgrade
+                    </button>
+                  ) : (
+                    <button className="btn btn-secondary" style={{ width: '100%' }} onClick={() => setView('landing')}>
+                      Go to Homepage
+                    </button>
+                  )}
                 </div>
               </div>
             )
