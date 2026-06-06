@@ -250,6 +250,18 @@ export default function App() {
   
   const [view, setView] = useState('landing') // 'landing' | 'dashboard' | 'review-customer'
   const [currentUser, setCurrentUser] = useState(null)
+  const [heroIdle, setHeroIdle] = useState(false)
+
+  useEffect(() => {
+    if (view === 'landing') {
+      const timer = setTimeout(() => {
+        setHeroIdle(true)
+      }, 1500)
+      return () => clearTimeout(timer)
+    } else {
+      setHeroIdle(false)
+    }
+  }, [view])
   
   // Local Database States
   const [dbUsers, setDbUsers] = useState([])
@@ -1728,7 +1740,7 @@ export default function App() {
             </div>
             <div className="hero-media">
               <div className="hero-media-wrapper">
-                <div className="hero-cards-container">
+                <div className={`hero-cards-container ${heroIdle ? 'is-idle' : ''}`}>
                   {/* Card 1: Bottom Layer / Cycling & Location App Screen */}
                   <div className="hero-mockup-card card-cyclist">
                     <div className="card-header-bar">
