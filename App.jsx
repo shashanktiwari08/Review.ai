@@ -311,7 +311,7 @@ export default function App() {
         services: ['Catering', 'Event Buffet', 'Birthday Parties', 'Corporate Dinners'],
         location: 'Rohini, Delhi',
         shortId: 'devcater',
-        googleUrl: 'https://share.google/n2O1wAHpv4QyvWDZl',
+        googleUrl: 'https://g.page/r/CZGkiXIfz3cDEBM/review',
         keywords: {
           primary_keywords: ['best catering in Delhi', 'wedding catering Rohini', 'top event food'],
           secondary_keywords: ['delicious buffet', 'polite staff', 'hygienic food prep'],
@@ -1063,7 +1063,7 @@ export default function App() {
                         services: ['Catering', 'Event Buffet', 'Birthday Parties', 'Corporate Dinners'],
                         location: 'Rohini, Delhi',
                         shortId: 'devcater',
-                        googleUrl: 'https://share.google/n2O1wAHpv4QyvWDZl',
+                        googleUrl: 'https://g.page/r/CZGkiXIfz3cDEBM/review',
                         keywords: {
                           primary_keywords: ['best catering in Delhi', 'wedding catering Rohini', 'top event food'],
                           secondary_keywords: ['delicious buffet', 'polite staff', 'hygienic food prep'],
