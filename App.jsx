@@ -1727,8 +1727,71 @@ export default function App() {
               </div>
             </div>
             <div className="hero-media">
-              <div className="hero-image-wrapper">
-                <img src="/hero_owner.png" alt="Happy local business owner showing a Google 5-star review page" />
+              <div className="hero-media-wrapper">
+                <div className="hero-cards-container">
+                  {/* Card 1: Bottom Layer / Cycling & Location App Screen */}
+                  <div className="hero-mockup-card card-cyclist">
+                    <div className="card-header-bar">
+                      <span className="dot"></span>
+                      <span className="dot"></span>
+                      <span className="dot"></span>
+                    </div>
+                    <div className="card-image-bg">
+                      <img src="https://images.unsplash.com/photo-1541614101331-1a5a3a194e92?w=400&q=80" alt="Cyclist" />
+                      <div className="card-overlay-text">
+                        <strong>Greenway Ride Track</strong>
+                        <span>Dwarka, Delhi</span>
+                      </div>
+                    </div>
+                    <div className="card-stats">
+                      <div className="stat-pill">🚴 12.4 km</div>
+                      <div className="stat-pill font-neon">🌱 2.4 kg CO2 Saved</div>
+                    </div>
+                  </div>
+
+                  {/* Card 2: Middle Layer / Sleek Analytics Dashboard Screen */}
+                  <div className="hero-mockup-card card-analytics">
+                    <div className="card-header-bar">
+                      <span className="dot"></span>
+                      <span className="dot"></span>
+                      <span className="dot"></span>
+                    </div>
+                    <div className="analytics-graph-container">
+                      <div className="analytics-header">
+                        <strong>Review Analytics</strong>
+                        <span className="badge-green">+35% SEO Boost</span>
+                      </div>
+                      <svg viewBox="0 0 100 40" className="chart-svg">
+                        <defs>
+                          <linearGradient id="neon-glow" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stopColor="#10B981" stopOpacity="0.4" />
+                            <stop offset="100%" stopColor="#10B981" stopOpacity="0" />
+                          </linearGradient>
+                        </defs>
+                        <path d="M0,35 Q15,10 30,25 T60,5 T90,20 L100,20 L100,40 L0,40 Z" fill="url(#neon-glow)" />
+                        <path d="M0,35 Q15,10 30,25 T60,5 T90,20 L100,20" fill="none" stroke="#10B981" strokeWidth="2" strokeLinecap="round" />
+                      </svg>
+                      <div className="keywords-row">
+                        <span className="tag-outline">best catering</span>
+                        <span className="tag-outline">wedding catering Dwarka</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Card 3: Top Layer / Mobile Lockscreen Screen */}
+                  <div className="hero-mockup-card card-lockscreen">
+                    <div className="phone-notch"></div>
+                    <div className="lockscreen-time">23:15</div>
+                    <div className="lockscreen-date">Sunday, June 7</div>
+                    <div className="lockscreen-widget">
+                      <div className="widget-logo">R</div>
+                      <div className="widget-content">
+                        <strong>Review.ai Active</strong>
+                        <span>12 Google reviews queued</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </header>
