@@ -32,13 +32,13 @@ export const SEED_BUSINESSES = [
     name: 'Dev Caterers',
     category: 'Restaurant / Cafe',
     services: ['Catering', 'Event Buffet', 'Birthday Parties', 'Corporate Dinners'],
-    location: 'Rohini, Delhi',
+    location: 'Dwarka, Delhi',
     shortId: 'devcater',
     googleUrl: 'https://g.page/r/CZGkiXIfz3cDEBM/review',
     keywords: {
-      primary_keywords: ['best catering in Delhi', 'wedding catering Rohini', 'top event food'],
+      primary_keywords: ['best catering in Delhi', 'wedding catering Dwarka', 'top event food'],
       secondary_keywords: ['delicious buffet', 'polite staff', 'hygienic food prep'],
-      geo_keywords: ['Delhi', 'Rohini'],
+      geo_keywords: ['Delhi', 'Dwarka'],
       service_keywords: ['catering', 'buffet', 'parties']
     }
   }
@@ -56,7 +56,7 @@ export const SEED_REVIEWS = [
   {
     id: 'rv_dev_1',
     businessId: 'b_dev',
-    text: 'Easily the best catering in Delhi! Dev Caterers managed our corporate event in Rohini perfectly. The delicious buffet was praised by all guests. Highly recommend their polite staff.',
+    text: 'Easily the best catering in Delhi! Dev Caterers managed our corporate event in Dwarka perfectly. The delicious buffet was praised by all guests. Highly recommend their polite staff.',
     rating: 5,
     time: now - 86400000 * 5,
     images: []
@@ -64,7 +64,7 @@ export const SEED_REVIEWS = [
   {
     id: 'rv_dev_2',
     businessId: 'b_dev',
-    text: 'Booked them for a wedding catering Rohini function. Excellent food, top event food quality, and hygienic food prep. The layout was very professional.',
+    text: 'Booked them for a wedding catering Dwarka function. Excellent food, top event food quality, and hygienic food prep. The layout was very professional.',
     rating: 5,
     time: now - 86400000 * 12,
     images: []

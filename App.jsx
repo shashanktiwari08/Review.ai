@@ -140,6 +140,75 @@ const generateReviewDraft = (business, rating, selectedTags) => {
   return intro + body + " Worth every rupee spent!"
 }
 
+// Generate 5 dynamic, category-adapted review suggestions
+const generateReviewSuggestionsList = (business, rating, seed = 0) => {
+  if (!business) return []
+
+  let pk = []
+  let sk = []
+  let gk = []
+  let sv = []
+
+  if (Array.isArray(business.keywords)) {
+    // Simulator preset flat keywords array format
+    pk = business.keywords.slice(0, 2)
+    sk = business.keywords.slice(2, 4)
+    gk = [business.location?.split(',')[0].trim() || 'Delhi']
+    sv = business.keywords.slice(4)
+  } else if (business.keywords) {
+    // Database business keywords object structure
+    pk = business.keywords.primary_keywords || []
+    sk = business.keywords.secondary_keywords || []
+    gk = business.keywords.geo_keywords || []
+    sv = business.keywords.service_keywords || []
+  }
+
+  const getOrFallback = (arr, index, fallback) => {
+    if (!arr || arr.length === 0) return fallback
+    return arr[index % arr.length] || fallback
+  }
+
+  const name = business.name || 'this business'
+  const loc = getOrFallback(gk, 0, business.location?.split(',')[0].trim() || 'Delhi')
+
+  let templates = []
+
+  if (rating >= 4) {
+    templates = [
+      `Easily the ${getOrFallback(pk, 0, 'best option')} in ${loc}! ${name} provided an exceptional experience with ${getOrFallback(sk, 0, 'great care')}.`,
+      `We used their ${getOrFallback(sv, 0, 'service')} in ${loc} and the ${getOrFallback(sk, 1, 'attentive support')} made it outstanding. Highly recommended!`,
+      `Undoubtedly the ${getOrFallback(pk, 1, 'top choice')} near ${loc}. Their ${getOrFallback(sk, 2, 'professional setup')} was appreciated by everyone.`,
+      `Fantastic ${getOrFallback(sv, 1, getOrFallback(sv, 0, 'service'))} quality and helpful staff. ${name} is our most reliable choice in ${loc}.`,
+      `Superb experience! The ${getOrFallback(pk, 2, getOrFallback(pk, 0, 'highest quality'))} details and attention to needs was worth it. Will visit again.`,
+      `The team at ${name} is amazing. If you are looking for ${getOrFallback(sv, 0, 'service')} in ${loc}, they are absolutely the best.`,
+      `Wonderful experience! They really excel at ${getOrFallback(sk, 0, 'great care')} and their ${getOrFallback(sv, 0, 'service')} is top-tier.`,
+      `I highly recommend ${name} for ${getOrFallback(sv, 1, getOrFallback(sv, 0, 'service'))} near ${loc}. They maintain extreme professionalism.`,
+      `Great hospitality and high standards. Their ${getOrFallback(sk, 1, 'attentive support')} in ${loc} is unmatched.`,
+      `Excellent. From the ${getOrFallback(sk, 2, 'professional setup')} to the final delivery, they exceeded all expectations.`
+    ]
+  } else {
+    templates = [
+      `The ${getOrFallback(sv, 0, 'service')} at ${name} in ${loc} was satisfactory, but we hope to see faster response times on our next visit.`,
+      `Decent experience overall. The ${getOrFallback(sk, 0, 'support')} was okay, though we hope they improve coordination in the future.`,
+      `The team is polite and professional, but a bit more attention to timing would make their ${getOrFallback(sv, 0, 'service')} absolutely perfect.`,
+      `Nice setup and atmosphere in ${loc}. We faced minor delays, but the staff was friendly and tried their best to resolve it.`,
+      `A satisfactory attempt. The staff is clean and friendly, but there is room to improve overall speed.`,
+      `The quality of ${getOrFallback(sv, 0, 'service')} is fine, but the communication during peak hours could be more proactive.`,
+      `We appreciate their polite behavior, but we hope for more structured assistance next time.`,
+      `The experience was acceptable, though we would love to see improved follow-ups from the management.`,
+      `Good location in ${loc} and polite staff, but they need slightly better organization during busy days.`,
+      `Overall decent, but they should focus on reducing the waiting time for their ${getOrFallback(sv, 0, 'service')}.`
+    ]
+  }
+
+  const startIndex = (seed * 3) % templates.length
+  const chosen = []
+  for (let i = 0; i < 5; i++) {
+    chosen.push(templates[(startIndex + i) % templates.length])
+  }
+  return chosen
+}
+
 // Landing Page Simulator Preset Data (No Dada Dev References)
 const SIM_BUSINESS_PRESETS = {
   healthcare: {
@@ -243,6 +312,7 @@ export default function App() {
   const [simCopied, setSimCopied] = useState(false)
   const [simFeedbackText, setSimFeedbackText] = useState("")
   const [simFeedbackSubmitted, setSimFeedbackSubmitted] = useState(false)
+  const [simSuggestionSeed, setSimSuggestionSeed] = useState(0)
 
   // Customer Portal State
   const [custRating, setCustRating] = useState(0)
@@ -250,6 +320,7 @@ export default function App() {
   const [custFeedbackText, setCustFeedbackText] = useState("")
   const [custSubmitted, setCustSubmitted] = useState(false)
   const [custFeedbackSubmitted, setCustFeedbackSubmitted] = useState(false)
+  const [custSuggestionSeed, setCustSuggestionSeed] = useState(0)
 
   // Image Upload and Lightbox States
   const [simUploadedImages, setSimUploadedImages] = useState([])
@@ -309,13 +380,13 @@ export default function App() {
         name: 'Dev Caterers',
         category: 'Restaurant / Cafe',
         services: ['Catering', 'Event Buffet', 'Birthday Parties', 'Corporate Dinners'],
-        location: 'Rohini, Delhi',
+        location: 'Dwarka, Delhi',
         shortId: 'devcater',
         googleUrl: 'https://g.page/r/CZGkiXIfz3cDEBM/review',
         keywords: {
-          primary_keywords: ['best catering in Delhi', 'wedding catering Rohini', 'top event food'],
+          primary_keywords: ['best catering in Delhi', 'wedding catering Dwarka', 'top event food'],
           secondary_keywords: ['delicious buffet', 'polite staff', 'hygienic food prep'],
-          geo_keywords: ['Delhi', 'Rohini'],
+          geo_keywords: ['Delhi', 'Dwarka'],
           service_keywords: ['catering', 'buffet', 'parties']
         }
       })
@@ -340,7 +411,7 @@ export default function App() {
         {
           id: 'rv_dev_1',
           businessId: 'b_dev',
-          text: 'Easily the best catering in Delhi! Dev Caterers managed our corporate event in Rohini perfectly. The delicious buffet was praised by all guests. Highly recommend their polite staff.',
+          text: 'Easily the best catering in Delhi! Dev Caterers managed our corporate event in Dwarka perfectly. The delicious buffet was praised by all guests. Highly recommend their polite staff.',
           rating: 5,
           time: now - 86400000 * 5,
           images: []
@@ -348,7 +419,7 @@ export default function App() {
         {
           id: 'rv_dev_2',
           businessId: 'b_dev',
-          text: 'Booked them for a wedding catering Rohini function. Excellent food, top event food quality, and hygienic food prep. The layout was very professional.',
+          text: 'Booked them for a wedding catering Dwarka function. Excellent food, top event food quality, and hygienic food prep. The layout was very professional.',
           rating: 5,
           time: now - 86400000 * 12,
           images: []
@@ -1061,13 +1132,13 @@ export default function App() {
                         name: 'Dev Caterers',
                         category: 'Restaurant / Cafe',
                         services: ['Catering', 'Event Buffet', 'Birthday Parties', 'Corporate Dinners'],
-                        location: 'Rohini, Delhi',
+                        location: 'Dwarka, Delhi',
                         shortId: 'devcater',
                         googleUrl: 'https://g.page/r/CZGkiXIfz3cDEBM/review',
                         keywords: {
-                          primary_keywords: ['best catering in Delhi', 'wedding catering Rohini', 'top event food'],
+                          primary_keywords: ['best catering in Delhi', 'wedding catering Dwarka', 'top event food'],
                           secondary_keywords: ['delicious buffet', 'polite staff', 'hygienic food prep'],
-                          geo_keywords: ['Delhi', 'Rohini'],
+                          geo_keywords: ['Delhi', 'Dwarka'],
                           service_keywords: ['catering', 'buffet', 'parties']
                         }
                       })
@@ -1094,7 +1165,7 @@ export default function App() {
                         {
                           id: 'rv_dev_1',
                           businessId: 'b_dev',
-                          text: 'Easily the best catering in Delhi! Dev Caterers managed our corporate event in Rohini perfectly. The delicious buffet was praised by all guests. Highly recommend their polite staff.',
+                          text: 'Easily the best catering in Delhi! Dev Caterers managed our corporate event in Dwarka perfectly. The delicious buffet was praised by all guests. Highly recommend their polite staff.',
                           rating: 5,
                           time: now - 86400000 * 5,
                           images: []
@@ -1102,7 +1173,7 @@ export default function App() {
                         {
                           id: 'rv_dev_2',
                           businessId: 'b_dev',
-                          text: 'Booked them for a wedding catering Rohini function. Excellent food, top event food quality, and hygienic food prep. The layout was very professional.',
+                          text: 'Booked them for a wedding catering Dwarka function. Excellent food, top event food quality, and hygienic food prep. The layout was very professional.',
                           rating: 5,
                           time: now - 86400000 * 12,
                           images: []
@@ -1750,6 +1821,7 @@ export default function App() {
                                 setSimRating(star)
                                 setSimCopied(false)
                                 setSimFeedbackSubmitted(false)
+                                setSimFeedbackText("")
                               }}
                             >
                               ★
@@ -1759,82 +1831,15 @@ export default function App() {
                       </div>
 
                       {/* Dynamic Gating / Form */}
-                      {simRating >= 4 ? (
+                      {simRating > 0 && (
                         <>
-                          <div style={{ textAlign: 'center' }}>
-                            <span style={{ fontSize: '11px', color: 'var(--text-muted)', display: 'block', marginBottom: '8px' }}>
-                              Tap highlights of your visit to build your review:
-                            </span>
-                            <div className="sim-keywords-container">
-                              {activeSimPreset.keywords.map(tag => (
-                                <span 
-                                  key={tag}
-                                  className={`sim-keyword-badge ${simSelectedTags.includes(tag) ? 'selected' : ''}`}
-                                  onClick={() => {
-                                    setSimSelectedTags(prev => 
-                                      prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]
-                                    )
-                                    setSimCopied(false)
-                                  }}
-                                >
-                                  + {tag}
-                                </span>
-                              ))}
+                          {simRating < 4 && (
+                            <div style={{ backgroundColor: 'var(--color-danger-bg)', color: 'var(--color-danger)', padding: '10px', borderRadius: 'var(--radius-md)', fontSize: '12px', marginBottom: '12px', borderLeft: '4px solid var(--color-danger)' }}>
+                              <strong>Private Feedback Channel:</strong> We are sorry your experience wasn't ideal. Your comments will be sent privately to the owner.
                             </div>
-                          </div>
-
-                          {/* Computed Review Draft */}
-                          <div>
-                            <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>Generated Draft:</span>
-                            <div className="sim-review-box">
-                              {renderHighlightedReviewText(simReviewText, { primary_keywords: activeSimPreset.keywords })}
-                              <div className="sim-glowing-indicator">
-                                <div className="sim-glowing-dot"></div>
-                                <span>SEO Strength: {simSelectedTags.length > 1 ? 'Optimal (100%)' : simSelectedTags.length > 0 ? 'Good (60%)' : 'Generic'}</span>
-                              </div>
-                            </div>
-                          </div>
-
-                          {/* Simulator Photo Upload mockup */}
-                          <div className="image-upload-wrapper" style={{ margin: '8px 0' }}>
-                            <label className="image-upload-zone" style={{ padding: '8px', fontSize: '11px' }}>
-                              <input type="file" multiple accept="image/*" onChange={(e) => handleImageChange(e, true)} style={{ display: 'none' }} />
-                              <span>📷 Add Photos (+35% Maps SEO)</span>
-                            </label>
-                            <div className="image-upload-previews" style={{ marginTop: '8px', gap: '6px' }}>
-                              {simUploadedImages.map((img, idx) => (
-                                <div key={idx} className="image-upload-preview-card" style={{ width: '45px', height: '45px' }}>
-                                  <img src={img} alt="review preview" />
-                                  <button type="button" className="remove-btn" style={{ width: '12px', height: '12px', fontSize: '8px' }} onClick={() => removeUploadedImage(idx, true)}>×</button>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-
-                          <button 
-                            className="btn btn-primary" 
-                            style={{ width: '100%', padding: '12px' }}
-                            onClick={() => {
-                              setSimCopied(true)
-                              const targetBiz = activeBusiness || { id: 'b_dev', name: activeSimPreset.name, category: activeSimPreset.category, googleUrl: activeSimPreset.googleUrl }
-                              trackGoogleRedirect(targetBiz, simRating, simReviewText, simUploadedImages)
-                            }}
-                          >
-                            {simCopied ? '✓ Copied Draft!' : 'Copy Draft & Open Google'}
-                          </button>
-                          {simCopied && (
-                            <span style={{ fontSize: '10px', color: 'var(--color-success)', textAlign: 'center', display: 'block' }}>
-                              Draft copied to clipboard! Opening Google Maps review window.
-                            </span>
                           )}
-                        </>
-                      ) : (
-                        // Gated Negative feedback
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                          <div style={{ backgroundColor: 'var(--color-danger-bg)', color: 'var(--color-danger)', padding: '10px', borderRadius: 'var(--radius-md)', fontSize: '12px' }}>
-                            <strong>Private Feedback Channel:</strong> We are sorry your experience wasn't ideal. Your comments will be sent directly and privately to the business owner so they can improve.
-                          </div>
-                          {simFeedbackSubmitted ? (
+
+                          {simFeedbackSubmitted && simRating < 4 ? (
                             <div style={{ textAlign: 'center', padding: '20px 0' }}>
                               <span style={{ fontSize: '32px', display: 'block', marginBottom: '8px' }}>✉</span>
                               <strong style={{ display: 'block', color: 'var(--color-success)' }}>Feedback Submitted!</strong>
@@ -1844,19 +1849,64 @@ export default function App() {
                             </div>
                           ) : (
                             <>
-                              <textarea
-                                className="form-control"
-                                style={{ minHeight: '80px', fontSize: '12px' }}
-                                placeholder="Tell us how we can make this right..."
-                                value={simFeedbackText}
-                                onChange={(e) => setSimFeedbackText(e.target.value)}
-                              />
-                              
-                              {/* Simulator Negative Image Upload */}
-                              <div className="image-upload-wrapper" style={{ margin: '4px 0' }}>
+                              <div style={{ textAlign: 'center', marginBottom: '12px' }}>
+                                <span style={{ fontSize: '11px', color: 'var(--text-muted)', display: 'block', marginBottom: '8px' }}>
+                                  Choose a suggested review template below:
+                                </span>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '180px', overflowY: 'auto', paddingRight: '4px', marginBottom: '8px' }}>
+                                  {generateReviewSuggestionsList(activeSimPreset, simRating, simSuggestionSeed).map((suggestion, index) => (
+                                    <div
+                                      key={index}
+                                      className={`suggested-review-card ${simFeedbackText === suggestion ? 'selected' : ''}`}
+                                      onClick={() => {
+                                        setSimFeedbackText(suggestion)
+                                        setSimCopied(false)
+                                      }}
+                                      style={{
+                                        padding: '10px',
+                                        border: simFeedbackText === suggestion ? '2px solid var(--color-brand)' : '1px solid var(--border-color)',
+                                        borderRadius: 'var(--radius-sm)',
+                                        cursor: 'pointer',
+                                        fontSize: '11px',
+                                        textAlign: 'left',
+                                        backgroundColor: simFeedbackText === suggestion ? 'var(--color-brand-bg)' : 'var(--bg-secondary)',
+                                        color: 'var(--text-primary)',
+                                        transition: 'all 0.15s ease'
+                                      }}
+                                    >
+                                      {suggestion}
+                                    </div>
+                                  ))}
+                                </div>
+                                <button
+                                  type="button"
+                                  className="btn btn-outline"
+                                  style={{ width: '100%', padding: '6px', fontSize: '11px', marginTop: '4px' }}
+                                  onClick={() => setSimSuggestionSeed(prev => prev + 1)}
+                                >
+                                  🔄 Generate More Suggestions
+                                </button>
+                              </div>
+
+                              <div style={{ textAlign: 'left', marginBottom: '12px' }}>
+                                <label className="form-label" style={{ fontSize: '11px', fontWeight: 600 }}>Edit / Customize Draft:</label>
+                                <textarea
+                                  className="form-control"
+                                  style={{ minHeight: '80px', fontSize: '12px' }}
+                                  placeholder="Select a suggestion above or type your own review..."
+                                  value={simFeedbackText}
+                                  onChange={(e) => {
+                                    setSimFeedbackText(e.target.value)
+                                    setSimCopied(false)
+                                  }}
+                                />
+                              </div>
+
+                              {/* Simulator Photo Upload mockup */}
+                              <div className="image-upload-wrapper" style={{ margin: '8px 0' }}>
                                 <label className="image-upload-zone" style={{ padding: '8px', fontSize: '11px' }}>
                                   <input type="file" multiple accept="image/*" onChange={(e) => handleImageChange(e, true)} style={{ display: 'none' }} />
-                                  <span>📷 Add Photos (e.g. receipt or issue)</span>
+                                  <span>📷 Add Photos (+35% Maps SEO)</span>
                                 </label>
                                 <div className="image-upload-previews" style={{ marginTop: '8px', gap: '6px' }}>
                                   {simUploadedImages.map((img, idx) => (
@@ -1868,26 +1918,49 @@ export default function App() {
                                 </div>
                               </div>
 
-                              <button 
-                                className="btn btn-primary"
-                                onClick={() => {
-                                  const targetBiz = activeBusiness || { id: 'b_dev' }
-                                  submitFeedback(
-                                    targetBiz,
-                                    simRating,
-                                    simFeedbackText,
-                                    true,
-                                    simUploadedImages
-                                  )
-                                }}
-                              >
-                                Submit Private Feedback
-                              </button>
+                              {simRating >= 4 ? (
+                                <>
+                                  <button 
+                                    className="btn btn-primary" 
+                                    style={{ width: '100%', padding: '12px' }}
+                                    onClick={() => {
+                                      setSimCopied(true)
+                                      const targetBiz = activeBusiness || { id: 'b_dev', name: activeSimPreset.name, category: activeSimPreset.category, googleUrl: activeSimPreset.googleUrl }
+                                      trackGoogleRedirect(targetBiz, simRating, simFeedbackText, simUploadedImages)
+                                    }}
+                                    disabled={!simFeedbackText.trim()}
+                                  >
+                                    {simCopied ? '✓ Copied Draft!' : 'Copy Draft & Open Google'}
+                                  </button>
+                                  {simCopied && (
+                                    <span style={{ fontSize: '10px', color: 'var(--color-success)', textAlign: 'center', display: 'block', marginTop: '6px' }}>
+                                      Draft copied to clipboard! Opening Google Maps review window.
+                                    </span>
+                                  )}
+                                </>
+                              ) : (
+                                <button 
+                                  className="btn btn-primary"
+                                  style={{ width: '100%' }}
+                                  onClick={() => {
+                                    const targetBiz = activeBusiness || { id: 'b_dev' }
+                                    submitFeedback(
+                                      targetBiz,
+                                      simRating,
+                                      simFeedbackText,
+                                      true,
+                                      simUploadedImages
+                                    )
+                                  }}
+                                  disabled={!simFeedbackText.trim()}
+                                >
+                                  Submit Private Feedback
+                                </button>
+                              )}
                             </>
                           )}
-                        </div>
+                        </>
                       )}
-
                     </div>
                   </div>
                 </div>
@@ -2125,7 +2198,7 @@ export default function App() {
                             className={`sim-star ${star <= custRating ? 'active' : ''}`}
                             onClick={() => {
                               setCustRating(star)
-                              setCustSelectedTags([])
+                              setCustFeedbackText("")
                             }}
                             style={{ fontSize: '30px' }}
                           >
@@ -2136,44 +2209,63 @@ export default function App() {
                     </div>
 
                     {/* rating flows */}
-                    {custRating >= 4 ? (
+                    {custRating > 0 ? (
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                        <div>
+                        {custRating < 4 && (
+                          <div style={{ backgroundColor: 'var(--color-warning-bg)', color: 'var(--color-warning)', padding: '12px', borderRadius: 'var(--radius-md)', fontSize: '12px', textAlign: 'left', borderLeft: '4px solid var(--color-warning)' }}>
+                            <strong>Tell us what went wrong.</strong> Your feedback will be sent privately to the owner to resolve.
+                          </div>
+                        )}
+
+                        <div style={{ textAlign: 'left' }}>
                           <span style={{ fontSize: '12px', color: 'var(--text-muted)', display: 'block', marginBottom: '8px' }}>
-                            Tap tags to include in your Google Review draft:
+                            Choose a suggested review template below:
                           </span>
-                          <div className="sim-keywords-container">
-                            {[
-                              ...(biz.keywords?.primary_keywords || []),
-                              ...(biz.keywords?.secondary_keywords || []),
-                              ...(biz.keywords?.geo_keywords || []),
-                              ...(biz.keywords?.service_keywords || []),
-                            ].map(tag => (
-                              <span
-                                key={tag}
-                                className={`sim-keyword-badge ${custSelectedTags.includes(tag) ? 'selected' : ''}`}
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '180px', overflowY: 'auto', paddingRight: '4px', marginBottom: '8px' }}>
+                            {generateReviewSuggestionsList(biz, custRating, custSuggestionSeed).map((suggestion, index) => (
+                              <div
+                                key={index}
+                                className={`suggested-review-card ${custFeedbackText === suggestion ? 'selected' : ''}`}
                                 onClick={() => {
-                                  setCustSelectedTags(prev =>
-                                    prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]
-                                  )
+                                  setCustFeedbackText(suggestion)
+                                  setCustSubmitted(false)
+                                }}
+                                style={{
+                                  padding: '12px',
+                                  border: custFeedbackText === suggestion ? '2px solid var(--color-brand)' : '1px solid var(--border-color)',
+                                  borderRadius: 'var(--radius-md)',
+                                  cursor: 'pointer',
+                                  fontSize: '13px',
+                                  textAlign: 'left',
+                                  backgroundColor: custFeedbackText === suggestion ? 'var(--color-brand-bg)' : 'var(--bg-secondary)',
+                                  color: 'var(--text-primary)',
+                                  transition: 'all 0.15s ease'
                                 }}
                               >
-                                + {tag}
-                              </span>
+                                {suggestion}
+                              </div>
                             ))}
                           </div>
+                          <button
+                            type="button"
+                            className="btn btn-outline"
+                            style={{ width: '100%', padding: '8px', fontSize: '12px', marginTop: '4px' }}
+                            onClick={() => setCustSuggestionSeed(prev => prev + 1)}
+                          >
+                            🔄 Generate More Suggestions
+                          </button>
                         </div>
 
-                        {/* Text Draft Display */}
-                        <div>
-                          <strong style={{ fontSize: '12px', display: 'block', textAlign: 'left', marginBottom: '4px' }}>Drafted Review:</strong>
-                          <div className="sim-review-box" style={{ textAlign: 'left', minHeight: '110px' }}>
-                            {renderHighlightedReviewText(reviewText, biz.keywords)}
-                            <div className="sim-glowing-indicator">
-                              <div className="sim-glowing-dot"></div>
-                              <span>SEO Strength: {custSelectedTags.length > 1 ? 'Optimal' : 'Standard'}</span>
-                            </div>
-                          </div>
+                        {/* Editable Text Area Display */}
+                        <div style={{ textAlign: 'left' }}>
+                          <label className="form-label" style={{ fontWeight: 600 }}>Edit / Customize Review Text:</label>
+                          <textarea
+                            className="form-control"
+                            style={{ minHeight: '100px', fontSize: '13px', lineHeight: '1.5' }}
+                            placeholder="Select a suggestion above or type your own review..."
+                            value={custFeedbackText}
+                            onChange={(e) => setCustFeedbackText(e.target.value)}
+                          />
                         </div>
 
                         {/* Customer Portal Image Upload UI */}
@@ -2192,57 +2284,32 @@ export default function App() {
                           </div>
                         </div>
 
-                        <button
-                          className="btn btn-primary"
-                          style={{ width: '100%', padding: '14px' }}
-                          onClick={() => {
-                            navigator.clipboard.writeText(reviewText)
-                            setCustSubmitted(true)
-                            trackGoogleRedirect(biz, custRating, reviewText, custUploadedImages)
-                            setTimeout(() => {
-                              window.open(biz.googleUrl, '_blank')
-                            }, 1200)
-                          }}
-                        >
-                          Copy & Open Google Review Page
-                        </button>
-                      </div>
-                    ) : custRating > 0 ? (
-                      // Negative gated flow
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', textAlign: 'left' }}>
-                        <div style={{ backgroundColor: 'var(--color-warning-bg)', color: 'var(--color-warning)', padding: '12px', borderRadius: 'var(--radius-md)', fontSize: '12px' }}>
-                          <strong>Tell us what went wrong.</strong> Your feedback will be sent privately to the owner to resolve.
-                        </div>
-                        <textarea
-                          className="customer-feedback-textarea"
-                          placeholder="Please let us know how we can improve your next visit..."
-                          value={custFeedbackText}
-                          onChange={(e) => setCustFeedbackText(e.target.value)}
-                        />
-                        
-                        {/* Customer Portal Negative Feedback Image Upload UI */}
-                        <div className="image-upload-wrapper">
-                          <label className="image-upload-zone">
-                            <input type="file" multiple accept="image/*" onChange={(e) => handleImageChange(e, false)} style={{ display: 'none' }} />
-                            <span>📷 Add Photos (e.g. receipt or issue)</span>
-                          </label>
-                          <div className="image-upload-previews">
-                            {custUploadedImages.map((img, idx) => (
-                              <div key={idx} className="image-upload-preview-card">
-                                <img src={img} alt="customer review preview" />
-                                <button type="button" className="remove-btn" onClick={() => removeUploadedImage(idx, false)}>×</button>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-
-                        <button
-                          className="btn btn-primary"
-                          style={{ width: '100%' }}
-                          onClick={() => submitFeedback(biz, custRating, custFeedbackText, false, custUploadedImages)}
-                        >
-                          Submit Private Feedback
-                        </button>
+                        {custRating >= 4 ? (
+                          <button
+                            className="btn btn-primary"
+                            style={{ width: '100%', padding: '14px' }}
+                            onClick={() => {
+                              navigator.clipboard.writeText(custFeedbackText)
+                              setCustSubmitted(true)
+                              trackGoogleRedirect(biz, custRating, custFeedbackText, custUploadedImages)
+                              setTimeout(() => {
+                                window.open(biz.googleUrl, '_blank')
+                              }, 1200)
+                            }}
+                            disabled={!custFeedbackText.trim()}
+                          >
+                            Copy & Open Google Review Page
+                          </button>
+                        ) : (
+                          <button
+                            className="btn btn-primary"
+                            style={{ width: '100%' }}
+                            onClick={() => submitFeedback(biz, custRating, custFeedbackText, false, custUploadedImages)}
+                            disabled={!custFeedbackText.trim()}
+                          >
+                            Submit Private Feedback
+                          </button>
+                        )}
                       </div>
                     ) : (
                       <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
