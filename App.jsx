@@ -1,12 +1,6 @@
-import React, { useState, useEffect } from 'react'
-import {
-  STORAGE,
-  SEED_USERS,
-  SEED_BUSINESSES,
-  SEED_SCANS,
-  SEED_REVIEWS,
-  SEED_PAYMENTS,
-} from './seed.js'
+import React, { useState, useEffect } from 'react';
+import { STORAGE, SEED_USERS, SEED_BUSINESSES, SEED_SCANS, SEED_REVIEWS, SEED_PAYMENTS } from './seed.js';
+import OwnerAnalytics from './OwnerAnalytics.jsx';
 
 // ==========================================================================
 // CORE HELPERS & LOCAL STORAGE INITIALIZATION
@@ -251,6 +245,17 @@ export default function App() {
   const [view, setView] = useState('landing') // 'landing' | 'dashboard' | 'review-customer'
   const [currentUser, setCurrentUser] = useState(null)
   const [heroIdle, setHeroIdle] = useState(false)
+  const ADMIN_TOKEN = 'reviewai2024'
+  const [isAdmin, setIsAdmin] = useState(false)
+  const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false)
+
+  // Detect admin token in URL
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    if (params.get('admin') === ADMIN_TOKEN) {
+      setIsAdmin(true)
+    }
+  }, [])
 
   useEffect(() => {
     if (view === 'landing') {
@@ -1685,37 +1690,56 @@ export default function App() {
          ========================================================================== */}
       {view === 'landing' && (
         <div>
-          {/* Header Navbar */}
+          {/* Mobile Navbar */}
           <nav className="navbar glass">
             <div className="container navbar-inner">
               <div className="logo" style={{ cursor: 'pointer' }} onClick={() => setView('landing')}>
                 <div className="logo-icon">R</div>
                 <span>ReviewAI</span>
               </div>
-              <ul className="nav-links">
-                <li><a href="#how-it-works" className="nav-link">How it Works</a></li>
-                <li><a href="#simulator" className="nav-link">Live Simulator</a></li>
-                <li><a href="#pricing" className="nav-link">Pricing</a></li>
-                <li><a href="#about" className="nav-link">Our Vision</a></li>
-              </ul>
-              <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-                {currentUser ? (
-                  <>
-                    <button className="btn btn-outline" onClick={() => setView('dashboard')}>
-                      Dashboard
-                    </button>
-                    <button className="btn btn-secondary" onClick={handleLogout}>
-                      Log Out
-                    </button>
-                  </>
-                ) : (
-                  <button className="btn btn-primary" onClick={() => { setShowAuthModal(true); setAuthTab('login') }}>
+              <div className="nav-links-desktop">
+                <a href="#how-it-works" className="nav-link-item">How it Works</a>
+                <a href="#simulator" className="nav-link-item">Live Simulator</a>
+                <a href="#pricing" className="nav-link-item">Pricing Plans</a>
+                <a href="#about" className="nav-link-item">Our Vision</a>
+              </div>
+              {currentUser ? (
+                <button className="btn btn-outline" style={{ padding: '8px 16px', fontSize: '13px', minHeight: '38px' }} onClick={() => setView('dashboard')}>
+                  Dashboard
+                </button>
+              ) : (
+                <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                  <button className="btn btn-primary" style={{ padding: '8px 16px', fontSize: '13px', minHeight: '38px' }} onClick={() => { setShowAuthModal(true); setAuthTab('login') }}>
                     Login
                   </button>
-                )}
-              </div>
+                  <button className="nav-hamburger" onClick={() => setMobileDrawerOpen(true)} aria-label="Menu">
+                    <span /><span /><span />
+                  </button>
+                </div>
+              )}
             </div>
           </nav>
+
+          {/* Mobile Nav Drawer */}
+          {mobileDrawerOpen && (
+            <>
+              <div className="mobile-drawer-backdrop" onClick={() => setMobileDrawerOpen(false)} />
+              <div className="mobile-drawer">
+                <button className="mobile-drawer-close" onClick={() => setMobileDrawerOpen(false)}>✕</button>
+                <div className="logo" style={{ marginBottom: '24px' }}>
+                  <div className="logo-icon">R</div>
+                  <span>ReviewAI</span>
+                </div>
+                <a href="#how-it-works" className="mobile-drawer-link" onClick={() => setMobileDrawerOpen(false)}>📖 How it Works</a>
+                <a href="#simulator" className="mobile-drawer-link" onClick={() => setMobileDrawerOpen(false)}>🎮 Live Simulator</a>
+                <a href="#pricing" className="mobile-drawer-link" onClick={() => setMobileDrawerOpen(false)}>💰 Pricing Plans</a>
+                <a href="#about" className="mobile-drawer-link" onClick={() => setMobileDrawerOpen(false)}>🌟 Our Vision</a>
+                <div style={{ marginTop: '16px', borderTop: '1px solid var(--border-color)', paddingTop: '16px' }}>
+                  <button className="btn btn-primary btn-full" onClick={() => { setShowAuthModal(true); setAuthTab('register'); setRegStep(1); setMobileDrawerOpen(false) }}>Get Started Free</button>
+                </div>
+              </div>
+            </>
+          )}
 
           {/* Hero Banner Section */}
           <header className="container hero">
@@ -2433,88 +2457,135 @@ export default function App() {
          ========================================================================== */}
       {view === 'dashboard' && currentUser && (
         <div className="dashboard-layout">
-          {/* Dashboard Sidebar */}
+          {/* Sidebar for Desktop */}
           <aside className="dashboard-sidebar">
-            <div>
-              <div className="logo" style={{ cursor: 'pointer', marginBottom: '24px' }} onClick={() => setView('landing')}>
-                <div className="logo-icon">R</div>
-                <span>ReviewAI</span>
-              </div>
-
-              {activeBusiness ? (
-                <div style={{ padding: '12px', backgroundColor: 'var(--bg-primary)', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)', marginBottom: '16px' }}>
-                  <span style={{ fontSize: '10px', textTransform: 'uppercase', color: 'var(--text-muted)', fontWeight: 700 }}>Active Business</span>
-                  <strong style={{ display: 'block', fontSize: '14px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{activeBusiness.name}</strong>
-                  <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>{activeBusiness.category}</span>
-                </div>
-              ) : (
-                <div style={{ padding: '12px', backgroundColor: 'var(--bg-primary)', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)', marginBottom: '16px' }}>
-                  <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>No business configured.</span>
+            <div className="sidebar-logo">
+              <div className="logo-icon">R</div>
+              <span>ReviewAI</span>
+            </div>
+            
+            <div className="sidebar-business-info">
+              {activeBusiness && (
+                <div>
+                  <div className="sidebar-biz-name">{activeBusiness.name}</div>
+                  <div className="sidebar-biz-plan">{currentUser.plan?.toUpperCase()} Plan</div>
                 </div>
               )}
-
-              <ul className="dashboard-nav">
-                <li 
-                  className={`dashboard-nav-item ${dashboardTab === 'analytics' ? 'active' : ''}`}
-                  onClick={() => setDashboardTab('analytics')}
-                >
-                  📊 Analytics Overview
-                </li>
-                <li 
-                  className={`dashboard-nav-item ${dashboardTab === 'qr' ? 'active' : ''}`}
-                  onClick={() => setDashboardTab('qr')}
-                >
-                  🖨️ QR Flyer Builder
-                </li>
-                <li 
-                  className={`dashboard-nav-item ${dashboardTab === 'reviews' ? 'active' : ''}`}
-                  onClick={() => setDashboardTab('reviews')}
-                >
-                  💬 Reviews Feed ({reviewsForActive.length})
-                </li>
-                <li 
-                  className={`dashboard-nav-item ${dashboardTab === 'billing' ? 'active' : ''}`}
-                  onClick={() => setDashboardTab('billing')}
-                >
-                  💳 Billing & Plans
-                </li>
-              </ul>
             </div>
 
-            <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              {activeBusiness && (
-                <button className="btn btn-outline" onClick={() => {
-                  // Record simulated scan event
-                  const newScan = {
-                    id: `sc_sim_${Date.now()}`,
-                    businessId: activeBusiness.id,
-                    time: Date.now(),
-                    converted: false
-                  }
-                  const updatedScans = [newScan, ...dbScans]
-                  syncState(STORAGE.scans, updatedScans, setDbScans)
+            <nav className="sidebar-nav">
+              <button 
+                className={`sidebar-nav-item ${dashboardTab === 'analytics' ? 'active' : ''}`} 
+                onClick={() => setDashboardTab('analytics')}
+              >
+                <span className="sidebar-nav-icon">📊</span>
+                <span className="sidebar-nav-label">Overview</span>
+              </button>
+              <button 
+                className={`sidebar-nav-item ${dashboardTab === 'reviews' ? 'active' : ''}`} 
+                onClick={() => setDashboardTab('reviews')}
+              >
+                <span className="sidebar-nav-icon">💬</span>
+                <span className="sidebar-nav-label">Reviews</span>
+              </button>
+              <button 
+                className={`sidebar-nav-item ${dashboardTab === 'qr' ? 'active' : ''}`} 
+                onClick={() => setDashboardTab('qr')}
+              >
+                <span className="sidebar-nav-icon">📱</span>
+                <span className="sidebar-nav-label">QR Flyer</span>
+              </button>
+              <button 
+                className={`sidebar-nav-item ${dashboardTab === 'billing' ? 'active' : ''}`} 
+                onClick={() => setDashboardTab('billing')}
+              >
+                <span className="sidebar-nav-icon">💳</span>
+                <span className="sidebar-nav-label">Billing</span>
+              </button>
+            </nav>
 
-                  setActiveBusinessId(activeBusiness.shortId)
-                  setCustRating(0)
-                  setCustSubmitted(false)
-                  setCustFeedbackSubmitted(false)
-                  setView('review-customer')
-                }}>
-                  🔗 View Customer Flow
+            <div className="sidebar-footer">
+              {activeBusiness && (
+                <button
+                  className="btn btn-outline btn-full"
+                  style={{ marginBottom: '8px', padding: '8px 12px', fontSize: '13px', minHeight: '38px' }}
+                  onClick={() => {
+                    const newScan = { id: `sc_sim_${Date.now()}`, businessId: activeBusiness.id, time: Date.now(), converted: false }
+                    syncState(STORAGE.scans, [newScan, ...dbScans], setDbScans)
+                    setActiveBusinessId(activeBusiness.shortId)
+                    setCustRating(0); setCustSubmitted(false); setCustFeedbackSubmitted(false)
+                    setView('review-customer')
+                  }}
+                >
+                  🔗 Preview Live Flow
                 </button>
               )}
-              <button className="btn btn-secondary" style={{ color: 'var(--color-danger)' }} onClick={handleLogout}>
-                🚪 Log Out
+              <button 
+                className="btn btn-secondary btn-full" 
+                style={{ padding: '8px 12px', fontSize: '13px', minHeight: '38px', color: 'var(--color-danger)' }} 
+                onClick={handleLogout}
+              >
+                Logout / Exit
               </button>
             </div>
           </aside>
+
+          <div className="dashboard-content-wrapper">
+
+          {/* Dashboard Top Bar (replaces sidebar on mobile) */}
+          <div className="dashboard-top-bar">
+            <div className="logo" style={{ cursor: 'pointer' }} onClick={() => setView('landing')}>
+              <div className="logo-icon">R</div>
+              <span>ReviewAI</span>
+            </div>
+            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+              {activeBusiness && (
+                <button
+                  className="btn btn-outline"
+                  style={{ padding: '6px 12px', fontSize: '12px', minHeight: '34px' }}
+                  onClick={() => {
+                    const newScan = { id: `sc_sim_${Date.now()}`, businessId: activeBusiness.id, time: Date.now(), converted: false }
+                    syncState(STORAGE.scans, [newScan, ...dbScans], setDbScans)
+                    setActiveBusinessId(activeBusiness.shortId)
+                    setCustRating(0); setCustSubmitted(false); setCustFeedbackSubmitted(false)
+                    setView('review-customer')
+                  }}
+                >
+                  🔗 Preview
+                </button>
+              )}
+              <button className="btn btn-secondary" style={{ padding: '6px 12px', fontSize: '12px', minHeight: '34px', color: 'var(--color-danger)' }} onClick={handleLogout}>
+                Exit
+              </button>
+            </div>
+          </div>
+
+          {/* Bottom Tab Bar */}
+          <nav className="dashboard-bottom-bar">
+            <button className={`tab-bar-item ${dashboardTab === 'analytics' ? 'active' : ''}`} onClick={() => setDashboardTab('analytics')}>
+              <span className="tab-bar-icon">📊</span>
+              <span className="tab-bar-label">Overview</span>
+            </button>
+            <button className={`tab-bar-item ${dashboardTab === 'reviews' ? 'active' : ''}`} onClick={() => setDashboardTab('reviews')}>
+              <span className="tab-bar-icon">💬</span>
+              <span className="tab-bar-label">Reviews</span>
+            </button>
+            <button className={`tab-bar-item ${dashboardTab === 'qr' ? 'active' : ''}`} onClick={() => setDashboardTab('qr')}>
+              <span className="tab-bar-icon">📱</span>
+              <span className="tab-bar-label">QR Flyer</span>
+            </button>
+            <button className={`tab-bar-item ${dashboardTab === 'billing' ? 'active' : ''}`} onClick={() => setDashboardTab('billing')}>
+              <span className="tab-bar-icon">💳</span>
+              <span className="tab-bar-label">Billing</span>
+            </button>
+          </nav>
 
           {/* Dashboard Main Panel */}
           <main className="dashboard-main">
             <div className="dashboard-header">
               <div className="dashboard-title-group">
-                <h2>Dashboard</h2>
-                <p>Logged in as: {currentUser.name} ({currentUser.plan?.toUpperCase()})</p>
+                <h2>{dashboardTab === 'analytics' ? '📊 Overview' : dashboardTab === 'reviews' ? '💬 Reviews' : dashboardTab === 'qr' ? '📱 QR Flyer' : '💳 Billing'}</h2>
+                {activeBusiness && <p>{activeBusiness.name} · {currentUser.plan?.toUpperCase()} Plan</p>}
               </div>
             </div>
 
@@ -2531,148 +2602,123 @@ export default function App() {
                 {/* 1. ANALYTICS PANEL */}
                 {dashboardTab === 'analytics' && (
                   <div>
-                    
-                    {/* Stat boxes */}
-                    <div className="analytics-grid">
-                      <div className="card">
-                        <div className="stat-card-title">Total QR Scans</div>
-                        <div className="stat-card-value">{totalScans}</div>
-                        <span className="stat-card-change" style={{ color: 'var(--color-success)', fontWeight: 600 }}>
-                          +{scansForActive.filter(s => s.time > Date.now() - 86400000 * 7).length} scans this week
-                        </span>
-                      </div>
-                      <div className="card">
-                        <div className="stat-card-title">Google Conversions</div>
-                        <div className="stat-card-value">{totalReviews}</div>
-                        <span className="stat-card-change" style={{ color: 'var(--color-success)', fontWeight: 600 }}>
-                          +{publicReviews.filter(r => r.time > Date.now() - 86400000 * 7).length} reviews this week
-                        </span>
-                      </div>
-                      <div className="card">
-                        <div className="stat-card-title">Conversion Rate</div>
-                        <div className="stat-card-value">{conversionRate}%</div>
-                        <span className="stat-card-change" style={{ color: 'var(--text-muted)', fontWeight: 400 }}>
-                          Average target maps conversion: 15%
-                        </span>
-                      </div>
-                      <div className="card">
-                        <div className="stat-card-title">Avg Review Score</div>
-                        <div className="stat-card-value">{avgRating} / 5</div>
-                        <span className="stat-card-change" style={{ color: '#eab308' }}>
-                          {'★'.repeat(Math.round(parseFloat(avgRating)))}{'☆'.repeat(5 - Math.round(parseFloat(avgRating)))}
-                        </span>
-                      </div>
-                    </div>
-
-                    {totalScans === 0 ? (
-                      /* Empty state layout */
-                      <div className="card" style={{ textAlign: 'center', padding: '50px 20px', marginBottom: '30px' }}>
-                        <div style={{ fontSize: '48px', marginBottom: '16px' }}>🖨️</div>
-                        <h3 style={{ fontSize: '20px', marginBottom: '8px' }}>Launch Your Review Campaign</h3>
-                        <p style={{ color: 'var(--text-secondary)', maxWidth: '520px', margin: '0 auto 24px auto', fontSize: '14px' }}>
-                          Welcome to your dashboard! Your review collection is currently empty. Head over to the **QR Flyer Builder** tab to download and print your customer check-out table tents. Once a customer scans and posts, analytics stats will update instantly!
-                        </p>
-                        <button className="btn btn-primary" onClick={() => setDashboardTab('qr')}>
-                          Go to QR Flyer Builder →
-                        </button>
-                      </div>
+                    {isAdmin ? (
+                      <OwnerAnalytics />
                     ) : (
-                      /* Standard Chart */
-                      <div className="card chart-container">
-                        <div className="chart-header">
-                          <div>
-                            <h3 style={{ fontSize: '18px' }}>QR Code Activity History</h3>
-                            <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Daily scans recorded over the last month</span>
+                      <>
+                        {/* Stat boxes */}
+                        <div className="analytics-grid">
+                          <div className="card">
+                            <div className="stat-card-title">Total QR Scans</div>
+                            <div className="stat-card-value">{totalScans}</div>
+                            <span className="stat-card-change" style={{ color: 'var(--color-success)', fontWeight: 600 }}>
+                              +{scansForActive.filter(s => s.time > Date.now() - 86400000 * 7).length} scans this week
+                            </span>
+                          </div>
+                          <div className="card">
+                            <div className="stat-card-title">Google Conversions</div>
+                            <div className="stat-card-value">{totalReviews}</div>
+                            <span className="stat-card-change" style={{ color: 'var(--color-success)', fontWeight: 600 }}>
+                              +{publicReviews.filter(r => r.time > Date.now() - 86400000 * 7).length} reviews this week
+                            </span>
+                          </div>
+                          <div className="card">
+                            <div className="stat-card-title">Conversion Rate</div>
+                            <div className="stat-card-value">{conversionRate}%</div>
+                            <span className="stat-card-change" style={{ color: 'var(--text-muted)', fontWeight: 400 }}>
+                              Average target maps conversion: 15%
+                            </span>
+                          </div>
+                          <div className="card">
+                            <div className="stat-card-title">Avg Review Score</div>
+                            <div className="stat-card-value">{avgRating} / 5</div>
+                            <span className="stat-card-change" style={{ color: '#eab308' }}>
+                              {'★'.repeat(Math.round(parseFloat(avgRating)))}{'☆'.repeat(5 - Math.round(parseFloat(avgRating)))}
+                            </span>
                           </div>
                         </div>
-                        <div className="chart-svg">
-                          <svg viewBox="0 0 500 150" width="100%" height="100%" preserveAspectRatio="none">
-                            {/* Gridlines */}
-                            <line x1="0" y1="20" x2="500" y2="20" className="chart-gridline" />
-                            <line x1="0" y1="70" x2="500" y2="70" className="chart-gridline" />
-                            <line x1="0" y1="120" x2="500" y2="120" className="chart-gridline" />
 
-                            {/* Chart Area Fill */}
-                            {svgChartPath.area && (
-                              <path 
-                                d={svgChartPath.area} 
-                                fill="url(#chart-gradient)" 
-                                opacity="0.1" 
-                              />
-                            )}
+                        {totalScans === 0 ? (
+                          <div className="card" style={{ textAlign: 'center', padding: '50px 20px', marginBottom: '30px' }}>
+                            <div style={{ fontSize: '48px', marginBottom: '16px' }}>🖨️</div>
+                            <h3 style={{ fontSize: '20px', marginBottom: '8px' }}>Launch Your Review Campaign</h3>
+                            <p style={{ color: 'var(--text-secondary)', maxWidth: '520px', margin: '0 auto 24px auto', fontSize: '14px' }}>
+                              Welcome to your dashboard! Your review collection is currently empty. Head over to the QR Flyer Builder tab to download and print your customer check-out table tents.
+                            </p>
+                            <button className="btn btn-primary" onClick={() => setDashboardTab('qr')}>
+                              Go to QR Flyer Builder →
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="card chart-container">
+                            <div className="chart-header">
+                              <div>
+                                <h3 style={{ fontSize: '18px' }}>QR Code Activity History</h3>
+                                <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Daily scans recorded over the last month</span>
+                              </div>
+                            </div>
+                            <div className="chart-svg">
+                              <svg viewBox="0 0 500 150" width="100%" height="100%" preserveAspectRatio="none">
+                                <line x1="0" y1="20" x2="500" y2="20" className="chart-gridline" />
+                                <line x1="0" y1="70" x2="500" y2="70" className="chart-gridline" />
+                                <line x1="0" y1="120" x2="500" y2="120" className="chart-gridline" />
+                                {svgChartPath.area && (
+                                  <path d={svgChartPath.area} fill="url(#chart-gradient)" opacity="0.1" />
+                                )}
+                                {svgChartPath.line && (
+                                  <path d={svgChartPath.line} fill="none" stroke="var(--color-brand)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+                                )}
+                                {svgChartPath.coords && svgChartPath.coords.map((pt, idx) => (
+                                  <circle key={idx} cx={pt.x} cy={pt.y} r="4" fill="var(--bg-primary)" stroke="var(--color-brand)" strokeWidth="2" />
+                                ))}
+                                <defs>
+                                  <linearGradient id="chart-gradient" x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="0%" stopColor="var(--color-brand)" stopOpacity="0.4"/>
+                                    <stop offset="100%" stopColor="var(--color-brand)" stopOpacity="0"/>
+                                  </linearGradient>
+                                </defs>
+                              </svg>
+                            </div>
+                          </div>
+                        )}
 
-                            {/* Chart Line Path */}
-                            {svgChartPath.line && (
-                              <path 
-                                d={svgChartPath.line} 
-                                fill="none" 
-                                stroke="var(--color-brand)" 
-                                strokeWidth="3" 
-                                strokeLinecap="round" 
-                                strokeLinejoin="round" 
-                              />
-                            )}
-
-                            {/* Chart Point Markers */}
-                            {svgChartPath.coords && svgChartPath.coords.map((pt, idx) => (
-                              <circle 
-                                key={idx}
-                                cx={pt.x}
-                                cy={pt.y}
-                                r="4"
-                                fill="var(--bg-primary)"
-                                stroke="var(--color-brand)"
-                                strokeWidth="2"
-                              />
-                            ))}
-
-                            {/* Gradient definitions */}
-                            <defs>
-                              <linearGradient id="chart-gradient" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="0%" stopColor="var(--color-brand)" stopOpacity="0.4"/>
-                                <stop offset="100%" stopColor="var(--color-brand)" stopOpacity="0"/>
-                              </linearGradient>
-                            </defs>
-                          </svg>
+                        {/* SEO Keyword Performance Summary */}
+                        <div className="card">
+                          <h3 style={{ fontSize: '18px', marginBottom: '16px' }}>SEO Keyword Analytics</h3>
+                          <div style={{ overflowX: 'auto' }}>
+                            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '14px' }}>
+                              <thead>
+                                <tr style={{ borderBottom: '2px solid var(--border-color)', color: 'var(--text-muted)' }}>
+                                  <th style={{ padding: '12px' }}>Keyword</th>
+                                  <th style={{ padding: '12px' }}>SEO Tier</th>
+                                  <th style={{ padding: '12px' }}>Reviews Included</th>
+                                  <th style={{ padding: '12px' }}>Est. Ranking Boost</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {Object.entries(activeBusiness.keywords || {}).flatMap(([type, list]) => 
+                                  (list || []).map(kw => {
+                                    const matchedCount = publicReviews.filter(r => r.text.toLowerCase().includes(kw.toLowerCase())).length
+                                    return (
+                                      <tr key={kw} style={{ borderBottom: '1px solid var(--border-color)' }}>
+                                        <td style={{ padding: '12px', fontWeight: 600 }}>{kw}</td>
+                                        <td style={{ padding: '12px', textTransform: 'capitalize', color: 'var(--text-secondary)' }}>
+                                          {type.replace('_keywords', '')}
+                                        </td>
+                                        <td style={{ padding: '12px' }}>{matchedCount} reviews</td>
+                                        <td style={{ padding: '12px', color: matchedCount > 0 ? 'var(--color-success)' : 'var(--text-muted)', fontWeight: 600 }}>
+                                          {matchedCount > 5 ? '+25% High' : matchedCount > 0 ? '+10% Medium' : 'Pending Review'}
+                                        </td>
+                                      </tr>
+                                    )
+                                  })
+                                )}
+                              </tbody>
+                            </table>
+                          </div>
                         </div>
-                      </div>
+                      </>
                     )}
-
-                    {/* SEO Keyword Performance Summary */}
-                    <div className="card">
-                      <h3 style={{ fontSize: '18px', marginBottom: '16px' }}>SEO Keyword Analytics</h3>
-                      <div style={{ overflowX: 'auto' }}>
-                        <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '14px' }}>
-                          <thead>
-                            <tr style={{ borderBottom: '2px solid var(--border-color)', color: 'var(--text-muted)' }}>
-                              <th style={{ padding: '12px' }}>Keyword</th>
-                              <th style={{ padding: '12px' }}>SEO Tier</th>
-                              <th style={{ padding: '12px' }}>Reviews Included</th>
-                              <th style={{ padding: '12px' }}>Est. Ranking Boost</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {Object.entries(activeBusiness.keywords || {}).flatMap(([type, list]) => 
-                              (list || []).map(kw => {
-                                const matchedCount = publicReviews.filter(r => r.text.toLowerCase().includes(kw.toLowerCase())).length
-                                return (
-                                  <tr key={kw} style={{ borderBottom: '1px solid var(--border-color)' }}>
-                                    <td style={{ padding: '12px', fontWeight: 600 }}>{kw}</td>
-                                    <td style={{ padding: '12px', textTransform: 'capitalize', color: 'var(--text-secondary)' }}>
-                                      {type.replace('_keywords', '')}
-                                    </td>
-                                    <td style={{ padding: '12px' }}>{matchedCount} reviews</td>
-                                    <td style={{ padding: '12px', color: matchedCount > 0 ? 'var(--color-success)' : 'var(--text-muted)', fontWeight: 600 }}>
-                                      {matchedCount > 5 ? '+25% High' : matchedCount > 0 ? '+10% Medium' : 'Pending Review'}
-                                    </td>
-                                  </tr>
-                                )
-                              })
-                            )}
-                          </tbody>
-                        </table>
-                      </div>
-                    </div>
                   </div>
                 )}
 
@@ -2977,6 +3023,7 @@ export default function App() {
               </div>
             )}
           </main>
+          </div>
         </div>
       )}
 
