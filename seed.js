@@ -21,7 +21,7 @@ export const SEED_USERS = [
     plan: 'pro',
     registeredAt: now - 86400000 * 25,
     paymentStatus: 'paid',
-    totalPaid: 2999
+    totalPaid: 5999
   }
 ]
 
@@ -83,7 +83,7 @@ export const SEED_PAYMENTS = [
   {
     id: 'inv_dev_1',
     userId: 'u_dev',
-    amount: 2999,
+    amount: 5999,
     plan: 'pro',
     date: now - 86400000 * 25,
     status: 'success'

@@ -277,11 +277,113 @@ export default function App() {
   // Load and sync local storage
   useEffect(() => {
     initLocalStorage()
-    const users = JSON.parse(localStorage.getItem(STORAGE.users)) || []
-    const businesses = JSON.parse(localStorage.getItem(STORAGE.businesses)) || []
-    const scans = JSON.parse(localStorage.getItem(STORAGE.scans)) || []
-    const reviews = JSON.parse(localStorage.getItem(STORAGE.reviews)) || []
-    const payments = JSON.parse(localStorage.getItem(STORAGE.payments)) || []
+    let users = JSON.parse(localStorage.getItem(STORAGE.users)) || []
+    let businesses = JSON.parse(localStorage.getItem(STORAGE.businesses)) || []
+    let scans = JSON.parse(localStorage.getItem(STORAGE.scans)) || []
+    let reviews = JSON.parse(localStorage.getItem(STORAGE.reviews)) || []
+    let payments = JSON.parse(localStorage.getItem(STORAGE.payments)) || []
+
+    let needsSync = false
+
+    // Guarantee that Dev Caterers data is present in localStorage if not already there
+    if (!users.some(u => u.id === 'u_dev')) {
+      users.push({
+        id: 'u_dev',
+        name: 'Dev Sharma',
+        email: 'dev@caterers.com',
+        password: 'dev',
+        phone: '+91 93543 84835',
+        plan: 'pro',
+        registeredAt: Date.now() - 86400000 * 25,
+        paymentStatus: 'paid',
+        totalPaid: 5999
+      })
+      needsSync = true
+    }
+
+    if (!businesses.some(b => b.id === 'b_dev')) {
+      businesses.push({
+        id: 'b_dev',
+        userId: 'u_dev',
+        name: 'Dev Caterers',
+        category: 'Restaurant / Cafe',
+        services: ['Catering', 'Event Buffet', 'Birthday Parties', 'Corporate Dinners'],
+        location: 'Rohini, Delhi',
+        shortId: 'devcater',
+        googleUrl: 'https://share.google/n2O1wAHpv4QyvWDZl',
+        keywords: {
+          primary_keywords: ['best catering in Delhi', 'wedding catering Rohini', 'top event food'],
+          secondary_keywords: ['delicious buffet', 'polite staff', 'hygienic food prep'],
+          geo_keywords: ['Delhi', 'Rohini'],
+          service_keywords: ['catering', 'buffet', 'parties']
+        }
+      })
+      needsSync = true
+    }
+
+    if (!scans.some(s => s.businessId === 'b_dev')) {
+      const now = Date.now()
+      const seedScans = Array.from({ length: 114 }, (_, i) => ({
+        id: `sc_dev_${i}`,
+        businessId: 'b_dev',
+        time: now - Math.random() * 86400000 * 25,
+        converted: Math.random() > 0.45
+      }))
+      scans = [...scans, ...seedScans]
+      needsSync = true
+    }
+
+    if (!reviews.some(r => r.businessId === 'b_dev')) {
+      const now = Date.now()
+      const seedReviews = [
+        {
+          id: 'rv_dev_1',
+          businessId: 'b_dev',
+          text: 'Easily the best catering in Delhi! Dev Caterers managed our corporate event in Rohini perfectly. The delicious buffet was praised by all guests. Highly recommend their polite staff.',
+          rating: 5,
+          time: now - 86400000 * 5,
+          images: []
+        },
+        {
+          id: 'rv_dev_2',
+          businessId: 'b_dev',
+          text: 'Booked them for a wedding catering Rohini function. Excellent food, top event food quality, and hygienic food prep. The layout was very professional.',
+          rating: 5,
+          time: now - 86400000 * 12,
+          images: []
+        },
+        {
+          id: 'rv_dev_3',
+          businessId: 'b_dev',
+          text: 'Decent buffet for our birthday party. Food was hot and fresh. Service was a bit slow initially, but overall very happy.',
+          rating: 4,
+          time: now - 86400000 * 18,
+          images: []
+        }
+      ]
+      reviews = [...reviews, ...seedReviews]
+      needsSync = true
+    }
+
+    if (!payments.some(p => p.userId === 'u_dev')) {
+      payments.push({
+        id: 'inv_dev_1',
+        userId: 'u_dev',
+        amount: 5999,
+        plan: 'pro',
+        date: Date.now() - 86400000 * 25,
+        status: 'success'
+      })
+      needsSync = true
+    }
+
+    if (needsSync) {
+      localStorage.setItem(STORAGE.users, JSON.stringify(users))
+      localStorage.setItem(STORAGE.businesses, JSON.stringify(businesses))
+      localStorage.setItem(STORAGE.scans, JSON.stringify(scans))
+      localStorage.setItem(STORAGE.reviews, JSON.stringify(reviews))
+      localStorage.setItem(STORAGE.payments, JSON.stringify(payments))
+    }
 
     setDbUsers(users)
     setDbBusinesses(businesses)
@@ -531,7 +633,7 @@ export default function App() {
 
     setRegStep(5)
     setTimeout(() => {
-      const amount = regPlan === 'starter' ? 999 : 2999
+      const amount = regPlan === 'starter' ? 3999 : 5999
       completeSuccessfulCheckout(amount, 'credit_card', `cc_${Date.now()}`)
     }, 2500)
   }
@@ -545,7 +647,7 @@ export default function App() {
     }
     setRegStep(5)
     setTimeout(() => {
-      const amount = regPlan === 'starter' ? 999 : 2999
+      const amount = regPlan === 'starter' ? 3999 : 5999
       completeSuccessfulCheckout(amount, 'upi_qr', `utr_${upiUtr}`)
     }, 2500)
   }
@@ -565,7 +667,7 @@ export default function App() {
   const executeUpiCollectRegistration = () => {
     setRegStep(5)
     setTimeout(() => {
-      const amount = regPlan === 'starter' ? 999 : 2999
+      const amount = regPlan === 'starter' ? 3999 : 5999
       completeSuccessfulCheckout(amount, 'upi_collect', `upi_req_${Date.now()}`)
     }, 2500)
   }
@@ -779,6 +881,17 @@ export default function App() {
   const conversionRate = totalScans > 0 ? ((scansForActive.filter(s => s.converted).length / totalScans) * 100).toFixed(1) : 0
   const avgRating = publicReviews.length > 0 ? (publicReviews.reduce((sum, r) => sum + r.rating, 0) / publicReviews.length).toFixed(1) : "0.0"
 
+  // Dynamic billing date renewal helper: 30 days from the latest successful payment
+  const nextBillingDate = (() => {
+    if (!currentUser) return ""
+    const userPayments = dbPayments.filter(p => p.userId === currentUser.id && p.status === 'success')
+    if (userPayments.length === 0) {
+      return new Date(currentUser.registeredAt + 86400000 * 30).toLocaleDateString()
+    }
+    const sorted = [...userPayments].sort((a, b) => b.date - a.date)
+    return new Date(sorted[0].date + 86400000 * 30).toLocaleDateString()
+  })()
+
   // Get grouped daily scans for the last 30 days
   const chartData = (() => {
     if (!activeBusiness) return []
@@ -934,7 +1047,7 @@ export default function App() {
                         plan: 'pro',
                         registeredAt: Date.now() - 86400000 * 25,
                         paymentStatus: 'paid',
-                        totalPaid: 2999
+                        totalPaid: 5999
                       })
                       syncState(STORAGE.users, cleanUsers, setDbUsers)
                     }
@@ -1011,7 +1124,7 @@ export default function App() {
                       cleanPayments.push({
                         id: 'inv_dev_1',
                         userId: 'u_dev',
-                        amount: 2999,
+                        amount: 5999,
                         plan: 'pro',
                         date: Date.now() - 86400000 * 25,
                         status: 'success'
@@ -1028,7 +1141,7 @@ export default function App() {
                       plan: 'pro',
                       registeredAt: Date.now() - 86400000 * 25,
                       paymentStatus: 'paid',
-                      totalPaid: 2999
+                      totalPaid: 5999
                     }
 
                     localStorage.setItem(STORAGE.currentUser, JSON.stringify(matchedUser))
@@ -1197,9 +1310,9 @@ export default function App() {
                         style={{ padding: '16px', cursor: 'pointer', textAlign: 'left', border: regPlan === 'starter' ? '2.5px solid var(--color-brand)' : '1px solid var(--border-color)' }}
                         onClick={() => setRegPlan('starter')}
                       >
-                        <strong style={{ fontSize: '16px', display: 'block' }}>Starter Growth Plan</strong>
+                        <strong style={{ fontSize: '16px', display: 'block' }}>Basic Growth Plan</strong>
                         <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
-                          ₹999 / month • 1 Location • 200 scans limit • Standard support
+                          ₹3,999 / month • 1 Location • 200 scans limit • Standard support
                         </span>
                       </div>
 
@@ -1210,7 +1323,7 @@ export default function App() {
                       >
                         <strong style={{ fontSize: '16px', display: 'block', color: 'var(--color-brand)' }}>Pro Optimization Plan</strong>
                         <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
-                          ₹2,999 / month • 3 Locations • Unlimited scans • Custom QR Editor & SVG History graphs
+                          ₹5,999 / month • 3 Locations • Unlimited scans • Custom QR Editor & SVG History graphs
                         </span>
                       </div>
 
@@ -1328,7 +1441,7 @@ export default function App() {
                             style={{ flex: 1 }} 
                             onClick={executePaymentRegistration}
                           >
-                            Pay ₹{regPlan === 'starter' ? '999' : '2,999'} & Activate Account
+                            Pay ₹{regPlan === 'starter' ? '3,999' : '5,999'} & Activate Account
                           </button>
                           <button className="btn btn-secondary" onClick={() => setRegStep(3)}>← Back</button>
                         </div>
@@ -1364,7 +1477,7 @@ export default function App() {
                             <div className="upi-qr-wrapper">
                               <img 
                                 src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(
-                                  `upi://pay?pa=${MERCHANT_UPI_ID}&pn=ReviewAI&am=${regPlan === 'starter' ? '999' : '2999'}&cu=INR&tn=ReviewAI%20Subscription`
+                                  `upi://pay?pa=${MERCHANT_UPI_ID}&pn=ReviewAI&am=${regPlan === 'starter' ? '3999' : '5999'}&cu=INR&tn=ReviewAI%20Subscription`
                                 )}`}
                                 alt="UPI Payment QR Code" 
                                 className="upi-qr-image"
@@ -1372,7 +1485,7 @@ export default function App() {
                             </div>
                             <div className="upi-merchant-details">
                               <strong>Payee UPI ID:</strong> {MERCHANT_UPI_ID}<br/>
-                              <strong>Amount:</strong> ₹{regPlan === 'starter' ? '999' : '2,999'}
+                              <strong>Amount:</strong> ₹{regPlan === 'starter' ? '3,999' : '5,999'}
                             </div>
 
                             <div className="form-group" style={{ marginTop: '20px', textAlign: 'left' }}>
@@ -1429,7 +1542,7 @@ export default function App() {
                             ) : (
                               <div>
                                 <div className="upi-collect-alert">
-                                  <strong>Request Sent!</strong> We have sent a collection request of ₹{regPlan === 'starter' ? '999' : '2,999'} to <strong>{buyerUpiId}</strong>.
+                                  <strong>Request Sent!</strong> We have sent a collection request of ₹{regPlan === 'starter' ? '3,999' : '5,999'} to <strong>{buyerUpiId}</strong>.
                                 </div>
                                 <p style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
                                   Please open your GPay / PhonePe / Paytm app and approve the pending collect request.
@@ -1673,7 +1786,7 @@ export default function App() {
                           <div>
                             <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>Generated Draft:</span>
                             <div className="sim-review-box">
-                              {simReviewText}
+                              {renderHighlightedReviewText(simReviewText, { primary_keywords: activeSimPreset.keywords })}
                               <div className="sim-glowing-indicator">
                                 <div className="sim-glowing-dot"></div>
                                 <span>SEO Strength: {simSelectedTags.length > 1 ? 'Optimal (100%)' : simSelectedTags.length > 0 ? 'Good (60%)' : 'Generic'}</span>
@@ -1876,9 +1989,9 @@ export default function App() {
               <div className="pricing-grid">
                 {/* Starter Plan */}
                 <div className="card pricing-card">
-                  <h3 className="pricing-plan-name">Starter Plan</h3>
+                  <h3 className="pricing-plan-name">Basic Plan</h3>
                   <div className="pricing-price">
-                    ₹999<span> / mo</span>
+                    ₹3,999<span> / mo</span>
                   </div>
                   <ul className="pricing-features">
                     <li>1 Business Location</li>
@@ -1897,7 +2010,7 @@ export default function App() {
                 <div className="card pricing-card popular">
                   <h3 className="pricing-plan-name" style={{ color: 'var(--color-brand)', fontWeight: 700 }}>Pro Growth Plan</h3>
                   <div className="pricing-price">
-                    ₹2,999<span> / mo</span>
+                    ₹5,999<span> / mo</span>
                   </div>
                   <ul className="pricing-features">
                     <li>3 Business Locations</li>
@@ -1941,6 +2054,28 @@ export default function App() {
 
           return (
             <div className="customer-portal-bg">
+              {currentUser && (
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  style={{
+                    position: 'absolute',
+                    top: '20px',
+                    left: '20px',
+                    zIndex: 100,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    borderColor: 'var(--border-color)',
+                    backgroundColor: 'var(--bg-secondary)',
+                    color: 'var(--text-primary)',
+                    boxShadow: 'var(--shadow-sm)'
+                  }}
+                  onClick={() => setView('dashboard')}
+                >
+                  ← Back to Dashboard
+                </button>
+              )}
               <div className="card customer-portal-card">
                 <div className="customer-portal-logo">
                   {biz.category?.toLowerCase() === 'healthcare' || biz.category?.toLowerCase() === 'clinic' ? '🏥' : biz.category?.toLowerCase() === 'restaurant' ? '🍔' : '🏨'}
@@ -2032,7 +2167,7 @@ export default function App() {
                         <div>
                           <strong style={{ fontSize: '12px', display: 'block', textAlign: 'left', marginBottom: '4px' }}>Drafted Review:</strong>
                           <div className="sim-review-box" style={{ textAlign: 'left', minHeight: '110px' }}>
-                            {reviewText}
+                            {renderHighlightedReviewText(reviewText, biz.keywords)}
                             <div className="sim-glowing-indicator">
                               <div className="sim-glowing-dot"></div>
                               <span>SEO Strength: {custSelectedTags.length > 1 ? 'Optimal' : 'Standard'}</span>
@@ -2177,6 +2312,16 @@ export default function App() {
             <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', gap: '8px' }}>
               {activeBusiness && (
                 <button className="btn btn-outline" onClick={() => {
+                  // Record simulated scan event
+                  const newScan = {
+                    id: `sc_sim_${Date.now()}`,
+                    businessId: activeBusiness.id,
+                    time: Date.now(),
+                    converted: false
+                  }
+                  const updatedScans = [newScan, ...dbScans]
+                  syncState(STORAGE.scans, updatedScans, setDbScans)
+
                   setActiveBusinessId(activeBusiness.shortId)
                   setCustRating(0)
                   setCustSubmitted(false)
@@ -2536,7 +2681,7 @@ export default function App() {
                               </span>
                             </div>
                             <p className="review-item-text" style={{ color: 'var(--text-primary)', fontWeight: 500 }}>
-                              {r.text.replace('[PRIVATE FEEDBACK] ', '')}
+                              {renderHighlightedReviewText(r.text.replace('[PRIVATE FEEDBACK] ', ''), activeBusiness.keywords)}
                             </p>
                             {r.images && r.images.length > 0 && (
                               <div className="dashboard-review-images">
@@ -2585,7 +2730,7 @@ export default function App() {
                         </h4>
                         
                         <div style={{ color: 'var(--color-success)', fontWeight: 600, fontSize: '14px' }}>
-                          ✓ Plan active & verified. Next billing date: {new Date(currentUser.registeredAt + 86400000 * 30).toLocaleDateString()}.
+                          ✓ Plan active & verified. Next billing date: {nextBillingDate}.
                         </div>
                       </div>
 
