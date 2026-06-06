@@ -270,6 +270,7 @@ export default function App() {
   const [flyerHeader, setFlyerHeader] = useState("Help Us Grow!")
   const [flyerBody, setFlyerBody] = useState("Scan the QR code below to quickly share your feedback. Your review helps other neighbors find us on Google Maps!")
   const [flyerBorderColor, setFlyerBorderColor] = useState("#2563eb")
+  const [qrBaseUrl, setQrBaseUrl] = useState(window.location.origin)
 
   // Merchant UPI ID constant for payments redirection
   const MERCHANT_UPI_ID = "9354384835-3@ybl"
@@ -2512,15 +2513,30 @@ export default function App() {
                       Place this flyer on checkout tables, menus, or doors. Customers scan the QR code to immediately trigger the review draft engine configured with your SEO keywords.
                     </p>
 
-                    <div className="form-group" style={{ marginBottom: '24px', maxWidth: '500px' }}>
-                      <label className="form-label" style={{ fontWeight: 700 }}>Google Review URL Target</label>
-                      <input 
-                        type="text" 
-                        className="form-control" 
-                        value={activeBusiness.googleUrl} 
-                        onChange={(e) => updateBusinessGoogleUrl(activeBusiness.id, e.target.value)}
-                        placeholder="e.g. https://g.page/r/your-id/review"
-                      />
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '24px', maxWidth: '800px' }}>
+                      <div className="form-group">
+                        <label className="form-label" style={{ fontWeight: 700 }}>Google Review URL Target</label>
+                        <input 
+                          type="text" 
+                          className="form-control" 
+                          value={activeBusiness.googleUrl} 
+                          onChange={(e) => updateBusinessGoogleUrl(activeBusiness.id, e.target.value)}
+                          placeholder="e.g. https://g.page/r/your-id/review"
+                        />
+                      </div>
+                      <div className="form-group">
+                        <label className="form-label" style={{ fontWeight: 700 }}>ReviewAI Server URL (for QR scans)</label>
+                        <input 
+                          type="text" 
+                          className="form-control" 
+                          value={qrBaseUrl} 
+                          onChange={(e) => setQrBaseUrl(e.target.value)}
+                          placeholder="e.g. http://192.168.1.100:5173"
+                        />
+                      </div>
+                    </div>
+                    <div style={{ backgroundColor: 'var(--bg-tertiary)', padding: '12px 16px', borderRadius: 'var(--radius-md)', borderLeft: '4px solid var(--color-warning)', marginBottom: '24px', maxWidth: '800px', fontSize: '13px' }}>
+                      <strong>📱 Scanning on physical phone locally?</strong> Since this app runs on your computer, a phone scanning the QR code cannot reach <code>localhost</code>. Connect your phone to the same Wi-Fi and change the <strong>ReviewAI Server URL</strong> above to your computer's local network IP (e.g. <code>http://192.168.1.15:5173</code>) to make the scan work in real time.
                     </div>
 
                     <div className="flyer-editor-layout">
@@ -2587,14 +2603,14 @@ export default function App() {
                             <div className="flyer-qr-image" style={{ width: '170px', height: '170px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                               <img 
                                 src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(
-                                  window.location.origin + '/?r=' + activeBusiness.shortId
+                                  (qrBaseUrl || window.location.origin) + '/?r=' + activeBusiness.shortId
                                 )}`}
                                 alt="Flyer QR Code" 
                                 style={{ width: '150px', height: '150px' }}
                               />
                             </div>
                             <div className="flyer-short-link">
-                              {window.location.host}/?r={activeBusiness.shortId}
+                              {(qrBaseUrl || window.location.origin).replace(/^https?:\/\//, '')}/?r={activeBusiness.shortId}
                             </div>
                           </div>
 
