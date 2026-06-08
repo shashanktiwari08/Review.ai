@@ -38,17 +38,34 @@ CREATE POLICY "Allow public read on payments"
   ON payments FOR SELECT
   USING (true);
 
--- 4. Sample seed data (optional — remove after testing)
-INSERT INTO companies (name, email, plan) VALUES
-  ('Dev Caterers', 'dev@caterers.com', 'pro'),
-  ('Smile Dental Clinic', 'info@smiledental.com', 'pro'),
-  ('Delhi Crown Hotel', 'front@delhicrown.com', 'starter');
+-- 4. Sample seed data (optional — insert only if not present)
+INSERT INTO companies (name, email, plan)
+SELECT 'Dev Caterers', 'dev@caterers.com', 'pro'
+WHERE NOT EXISTS (SELECT 1 FROM companies WHERE name = 'Dev Caterers');
 
-INSERT INTO payments (company_id, amount, plan, status, created_at) VALUES
-  ((SELECT id FROM companies WHERE name = 'Dev Caterers'), 5999, 'pro', 'success', now() - interval '25 days'),
-  ((SELECT id FROM companies WHERE name = 'Dev Caterers'), 5999, 'pro', 'success', now() - interval '5 days'),
-  ((SELECT id FROM companies WHERE name = 'Smile Dental Clinic'), 5999, 'pro', 'success', now() - interval '10 days'),
-  ((SELECT id FROM companies WHERE name = 'Delhi Crown Hotel'), 2999, 'starter', 'success', now() - interval '3 days');
+INSERT INTO companies (name, email, plan)
+SELECT 'Smile Dental Clinic', 'info@smiledental.com', 'pro'
+WHERE NOT EXISTS (SELECT 1 FROM companies WHERE name = 'Smile Dental Clinic');
+
+INSERT INTO companies (name, email, plan)
+SELECT 'Delhi Crown Hotel', 'front@delhicrown.com', 'starter'
+WHERE NOT EXISTS (SELECT 1 FROM companies WHERE name = 'Delhi Crown Hotel');
+
+INSERT INTO payments (company_id, amount, plan, status, created_at)
+SELECT (SELECT id FROM companies WHERE name = 'Dev Caterers' LIMIT 1), 5999, 'pro', 'success', now() - interval '25 days'
+WHERE NOT EXISTS (SELECT 1 FROM payments WHERE company_id = (SELECT id FROM companies WHERE name = 'Dev Caterers' LIMIT 1) AND created_at <= now() - interval '24 days');
+
+INSERT INTO payments (company_id, amount, plan, status, created_at)
+SELECT (SELECT id FROM companies WHERE name = 'Dev Caterers' LIMIT 1), 5999, 'pro', 'success', now() - interval '5 days'
+WHERE NOT EXISTS (SELECT 1 FROM payments WHERE company_id = (SELECT id FROM companies WHERE name = 'Dev Caterers' LIMIT 1) AND created_at > now() - interval '6 days' AND created_at < now() - interval '4 days');
+
+INSERT INTO payments (company_id, amount, plan, status, created_at)
+SELECT (SELECT id FROM companies WHERE name = 'Smile Dental Clinic' LIMIT 1), 5999, 'pro', 'success', now() - interval '10 days'
+WHERE NOT EXISTS (SELECT 1 FROM payments WHERE company_id = (SELECT id FROM companies WHERE name = 'Smile Dental Clinic' LIMIT 1));
+
+INSERT INTO payments (company_id, amount, plan, status, created_at)
+SELECT (SELECT id FROM companies WHERE name = 'Delhi Crown Hotel' LIMIT 1), 2999, 'starter', 'success', now() - interval '3 days'
+WHERE NOT EXISTS (SELECT 1 FROM payments WHERE company_id = (SELECT id FROM companies WHERE name = 'Delhi Crown Hotel' LIMIT 1));
 
 -- 5. Scans table
 CREATE TABLE IF NOT EXISTS scans (
