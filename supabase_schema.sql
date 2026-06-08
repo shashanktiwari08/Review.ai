@@ -28,11 +28,12 @@ CREATE INDEX IF NOT EXISTS idx_payments_created_at ON payments(created_at);
 ALTER TABLE companies ENABLE ROW LEVEL SECURITY;
 ALTER TABLE payments ENABLE ROW LEVEL SECURITY;
 
--- Allow anonymous reads (for the public analytics dashboard)
+DROP POLICY IF EXISTS "Allow public read on companies" ON companies;
 CREATE POLICY "Allow public read on companies"
   ON companies FOR SELECT
   USING (true);
 
+DROP POLICY IF EXISTS "Allow public read on payments" ON payments;
 CREATE POLICY "Allow public read on payments"
   ON payments FOR SELECT
   USING (true);
@@ -77,24 +78,27 @@ CREATE INDEX IF NOT EXISTS idx_reviews_business_id ON reviews(business_id);
 ALTER TABLE scans ENABLE ROW LEVEL SECURITY;
 ALTER TABLE reviews ENABLE ROW LEVEL SECURITY;
 
--- Allow public read and write via anon key
+DROP POLICY IF EXISTS "Allow public read on scans" ON scans;
 CREATE POLICY "Allow public read on scans"
   ON scans FOR SELECT
   USING (true);
 
+DROP POLICY IF EXISTS "Allow public insert on scans" ON scans;
 CREATE POLICY "Allow public insert on scans"
   ON scans FOR INSERT
   WITH CHECK (true);
 
+DROP POLICY IF EXISTS "Allow public update on scans" ON scans;
 CREATE POLICY "Allow public update on scans"
   ON scans FOR UPDATE
   USING (true);
 
+DROP POLICY IF EXISTS "Allow public read on reviews" ON reviews;
 CREATE POLICY "Allow public read on reviews"
   ON reviews FOR SELECT
   USING (true);
 
+DROP POLICY IF EXISTS "Allow public insert on reviews" ON reviews;
 CREATE POLICY "Allow public insert on reviews"
   ON reviews FOR INSERT
   WITH CHECK (true);
-
