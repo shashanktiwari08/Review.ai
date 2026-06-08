@@ -48,3 +48,53 @@ INSERT INTO payments (company_id, amount, plan, status, created_at) VALUES
   ((SELECT id FROM companies WHERE name = 'Dev Caterers'), 5999, 'pro', 'success', now() - interval '5 days'),
   ((SELECT id FROM companies WHERE name = 'Smile Dental Clinic'), 5999, 'pro', 'success', now() - interval '10 days'),
   ((SELECT id FROM companies WHERE name = 'Delhi Crown Hotel'), 2999, 'starter', 'success', now() - interval '3 days');
+
+-- 5. Scans table
+CREATE TABLE IF NOT EXISTS scans (
+  id TEXT PRIMARY KEY,
+  business_id TEXT NOT NULL,
+  time BIGINT NOT NULL,
+  converted BOOLEAN NOT NULL DEFAULT false,
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+
+-- 6. Reviews table
+CREATE TABLE IF NOT EXISTS reviews (
+  id TEXT PRIMARY KEY,
+  business_id TEXT NOT NULL,
+  text TEXT NOT NULL,
+  rating INTEGER NOT NULL,
+  time BIGINT NOT NULL,
+  images TEXT[] DEFAULT '{}',
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+
+-- Index for reviews and scans lookups
+CREATE INDEX IF NOT EXISTS idx_scans_business_id ON scans(business_id);
+CREATE INDEX IF NOT EXISTS idx_reviews_business_id ON reviews(business_id);
+
+-- Enable RLS
+ALTER TABLE scans ENABLE ROW LEVEL SECURITY;
+ALTER TABLE reviews ENABLE ROW LEVEL SECURITY;
+
+-- Allow public read and write via anon key
+CREATE POLICY "Allow public read on scans"
+  ON scans FOR SELECT
+  USING (true);
+
+CREATE POLICY "Allow public insert on scans"
+  ON scans FOR INSERT
+  WITH CHECK (true);
+
+CREATE POLICY "Allow public update on scans"
+  ON scans FOR UPDATE
+  USING (true);
+
+CREATE POLICY "Allow public read on reviews"
+  ON reviews FOR SELECT
+  USING (true);
+
+CREATE POLICY "Allow public insert on reviews"
+  ON reviews FOR INSERT
+  WITH CHECK (true);
+

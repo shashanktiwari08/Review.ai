@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { STORAGE, SEED_USERS, SEED_BUSINESSES, SEED_SCANS, SEED_REVIEWS, SEED_PAYMENTS } from './seed.js';
 import OwnerAnalytics from './OwnerAnalytics.jsx';
+import { supabase } from './supabaseClient';
 
 // ==========================================================================
 // CORE HELPERS & LOCAL STORAGE INITIALIZATION
@@ -502,6 +503,11 @@ export default function App() {
         localStorage.setItem(STORAGE.scans, JSON.stringify(updatedScans))
         setDbScans(updatedScans)
 
+        // Write scan to Supabase
+        supabase.from('scans').insert([newScan]).then(({ error }) => {
+          if (error) console.error("Supabase scan insert error:", error)
+        })
+
         // 2. Route customer directly to review view
         setActiveBusinessId(refBizShortId)
         setCustRating(0)
@@ -516,6 +522,37 @@ export default function App() {
       }
     }
   }, [])
+
+  // Load scans and reviews from Supabase on mount
+  useEffect(() => {
+    const loadSupabaseData = async () => {
+      try {
+        const { data: scansData, error: scansError } = await supabase
+          .from('scans')
+          .select('*')
+          .order('time', { ascending: false });
+        
+        if (scansData && !scansError) {
+          setDbScans(scansData);
+          localStorage.setItem(STORAGE.scans, JSON.stringify(scansData));
+        }
+
+        const { data: reviewsData, error: reviewsError } = await supabase
+          .from('reviews')
+          .select('*')
+          .order('time', { ascending: false });
+
+        if (reviewsData && !reviewsError) {
+          setDbReviews(reviewsData);
+          localStorage.setItem(STORAGE.reviews, JSON.stringify(reviewsData));
+        }
+      } catch (err) {
+        console.error("Error loading data from Supabase:", err);
+      }
+    };
+
+    loadSupabaseData();
+  }, []);
 
   // UPI Countdown Timer hook for simulated collect requests
   useEffect(() => {
@@ -793,7 +830,7 @@ export default function App() {
   }
 
   // Submit Feedback Recovery (Gating)
-  const submitFeedback = (business, stars, feedbackText, isSimulator = false, images = []) => {
+  const submitFeedback = async (business, stars, feedbackText, isSimulator = false, images = []) => {
     if (!feedbackText.trim()) return
 
     const newFeedback = {
@@ -808,15 +845,30 @@ export default function App() {
     const updatedReviews = [newFeedback, ...dbReviews]
     syncState(STORAGE.reviews, updatedReviews, setDbReviews)
 
+    // Write review to Supabase if not simulator
+    if (!isSimulator) {
+      try {
+        await supabase
+          .from('reviews')
+          .insert([newFeedback]);
+      } catch (err) {
+        console.error("Supabase private feedback insert error:", err)
+      }
+    }
+
     // Mark scan as converted if not simulator
     if (!isSimulator) {
       const scans = [...dbScans]
       const lastScanIdx = scans.findIndex(s => s.businessId === business.id && !s.converted)
+      let updatedScan = null
+      let newScan = null
+
       if (lastScanIdx !== -1) {
         scans[lastScanIdx].converted = true
+        updatedScan = scans[lastScanIdx]
         syncState(STORAGE.scans, scans, setDbScans)
       } else {
-        const newScan = {
+        newScan = {
           id: `sc_new_${Date.now()}`,
           businessId: business.id,
           time: Date.now(),
@@ -824,6 +876,22 @@ export default function App() {
         }
         const updatedScans = [newScan, ...dbScans]
         syncState(STORAGE.scans, updatedScans, setDbScans)
+      }
+
+      // Write scan to Supabase
+      try {
+        if (updatedScan) {
+          await supabase
+            .from('scans')
+            .update({ converted: true })
+            .eq('id', updatedScan.id);
+        } else if (newScan) {
+          await supabase
+            .from('scans')
+            .insert([newScan]);
+        }
+      } catch (err) {
+        console.error("Supabase private feedback scan update error:", err)
       }
     }
 
@@ -837,15 +905,19 @@ export default function App() {
   }
 
   // Converted scan tracker (Google click)
-  const trackGoogleRedirect = (business, stars, reviewText, images = []) => {
+  const trackGoogleRedirect = async (business, stars, reviewText, images = []) => {
     // Mark scan as converted
     const scans = [...dbScans]
     const lastScanIdx = scans.findIndex(s => s.businessId === business.id && !s.converted)
+    let updatedScan = null
+    let newScan = null
+
     if (lastScanIdx !== -1) {
       scans[lastScanIdx].converted = true
+      updatedScan = scans[lastScanIdx]
       syncState(STORAGE.scans, scans, setDbScans)
     } else {
-      const newScan = {
+      newScan = {
         id: `sc_new_${Date.now()}`,
         businessId: business.id,
         time: Date.now(),
@@ -853,6 +925,22 @@ export default function App() {
       }
       const updatedScans = [newScan, ...dbScans]
       syncState(STORAGE.scans, updatedScans, setDbScans)
+    }
+
+    // Write scan to Supabase
+    try {
+      if (updatedScan) {
+        await supabase
+          .from('scans')
+          .update({ converted: true })
+          .eq('id', updatedScan.id);
+      } else if (newScan) {
+        await supabase
+          .from('scans')
+          .insert([newScan]);
+      }
+    } catch (err) {
+      console.error("Supabase scan update error:", err)
     }
 
     const newReviewObj = {
@@ -865,6 +953,15 @@ export default function App() {
     }
     const updatedReviews = [newReviewObj, ...dbReviews]
     syncState(STORAGE.reviews, updatedReviews, setDbReviews)
+
+    // Write review to Supabase
+    try {
+      await supabase
+        .from('reviews')
+        .insert([newReviewObj]);
+    } catch (err) {
+      console.error("Supabase review insert error:", err)
+    }
   }
 
   // Keywords management (Dashboard)
