@@ -2517,13 +2517,11 @@ export default function App() {
                               navigator.clipboard.writeText(custFeedbackText)
                               setCustSubmitted(true)
                               trackGoogleRedirect(biz, custRating, custFeedbackText, custUploadedImages)
-                              setTimeout(() => {
-                                window.open(biz.googleUrl, '_blank')
-                              }, 1200)
+                              window.open(biz.googleUrl, '_blank')
                             }}
                             disabled={!custFeedbackText.trim()}
                           >
-                            Copy & Open Google Review Page
+                            Submit Review
                           </button>
                         ) : (
                           <button
