@@ -470,7 +470,12 @@ export default function App() {
         setDbScans(updatedScans)
 
         // Write scan to Supabase
-        supabase.from('scans').insert([newScan]).then(({ error }) => {
+        supabase.from('scans').insert([{
+          id: newScan.id,
+          business_id: newScan.businessId,
+          time: newScan.time,
+          converted: newScan.converted
+        }]).then(({ error }) => {
           if (error) console.error("Supabase scan insert error:", error)
         })
 
@@ -499,8 +504,14 @@ export default function App() {
           .order('time', { ascending: false });
         
         if (scansData && !scansError) {
-          setDbScans(scansData);
-          localStorage.setItem(STORAGE.scans, JSON.stringify(scansData));
+          const mappedScans = scansData.map(s => ({
+            id: s.id,
+            businessId: s.business_id,
+            time: Number(s.time),
+            converted: s.converted
+          }))
+          setDbScans(mappedScans);
+          localStorage.setItem(STORAGE.scans, JSON.stringify(mappedScans));
         }
 
         const { data: reviewsData, error: reviewsError } = await supabase
@@ -509,8 +520,16 @@ export default function App() {
           .order('time', { ascending: false });
 
         if (reviewsData && !reviewsError) {
-          setDbReviews(reviewsData);
-          localStorage.setItem(STORAGE.reviews, JSON.stringify(reviewsData));
+          const mappedReviews = reviewsData.map(r => ({
+            id: r.id,
+            businessId: r.business_id,
+            text: r.text,
+            rating: Number(r.rating),
+            time: Number(r.time),
+            images: r.images
+          }))
+          setDbReviews(mappedReviews);
+          localStorage.setItem(STORAGE.reviews, JSON.stringify(mappedReviews));
         }
       } catch (err) {
         console.error("Error loading data from Supabase:", err);
@@ -526,9 +545,15 @@ export default function App() {
         'postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'scans' },
         (payload) => {
+          const mappedScan = {
+            id: payload.new.id,
+            businessId: payload.new.business_id,
+            time: Number(payload.new.time),
+            converted: payload.new.converted
+          }
           setDbScans(prev => {
-            if (prev.some(s => s.id === payload.new.id)) return prev;
-            const updated = [payload.new, ...prev];
+            if (prev.some(s => s.id === mappedScan.id)) return prev;
+            const updated = [mappedScan, ...prev];
             localStorage.setItem(STORAGE.scans, JSON.stringify(updated));
             return updated;
           });
@@ -538,8 +563,14 @@ export default function App() {
         'postgres_changes',
         { event: 'UPDATE', schema: 'public', table: 'scans' },
         (payload) => {
+          const mappedScan = {
+            id: payload.new.id,
+            businessId: payload.new.business_id,
+            time: Number(payload.new.time),
+            converted: payload.new.converted
+          }
           setDbScans(prev => {
-            const updated = prev.map(s => s.id === payload.new.id ? payload.new : s);
+            const updated = prev.map(s => s.id === mappedScan.id ? mappedScan : s);
             localStorage.setItem(STORAGE.scans, JSON.stringify(updated));
             return updated;
           });
@@ -554,9 +585,17 @@ export default function App() {
         'postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'reviews' },
         (payload) => {
+          const mappedReview = {
+            id: payload.new.id,
+            businessId: payload.new.business_id,
+            text: payload.new.text,
+            rating: Number(payload.new.rating),
+            time: Number(payload.new.time),
+            images: payload.new.images
+          }
           setDbReviews(prev => {
-            if (prev.some(r => r.id === payload.new.id)) return prev;
-            const updated = [payload.new, ...prev];
+            if (prev.some(r => r.id === mappedReview.id)) return prev;
+            const updated = [mappedReview, ...prev];
             localStorage.setItem(STORAGE.reviews, JSON.stringify(updated));
             return updated;
           });
@@ -866,7 +905,14 @@ export default function App() {
       try {
         await supabase
           .from('reviews')
-          .insert([newFeedback]);
+          .insert([{
+            id: newFeedback.id,
+            business_id: newFeedback.businessId,
+            text: newFeedback.text,
+            rating: newFeedback.rating,
+            time: newFeedback.time,
+            images: newFeedback.images
+          }]);
       } catch (err) {
         console.error("Supabase private feedback insert error:", err)
       }
@@ -904,7 +950,12 @@ export default function App() {
         } else if (newScan) {
           await supabase
             .from('scans')
-            .insert([newScan]);
+            .insert([{
+              id: newScan.id,
+              business_id: newScan.businessId,
+              time: newScan.time,
+              converted: newScan.converted
+            }]);
         }
       } catch (err) {
         console.error("Supabase private feedback scan update error:", err)
@@ -953,7 +1004,12 @@ export default function App() {
       } else if (newScan) {
         await supabase
           .from('scans')
-          .insert([newScan]);
+          .insert([{
+            id: newScan.id,
+            business_id: newScan.businessId,
+            time: newScan.time,
+            converted: newScan.converted
+          }]);
       }
     } catch (err) {
       console.error("Supabase scan update error:", err)
@@ -974,7 +1030,14 @@ export default function App() {
     try {
       await supabase
         .from('reviews')
-        .insert([newReviewObj]);
+        .insert([{
+          id: newReviewObj.id,
+          business_id: newReviewObj.businessId,
+          text: newReviewObj.text,
+          rating: newReviewObj.rating,
+          time: newReviewObj.time,
+          images: newReviewObj.images
+        }]);
     } catch (err) {
       console.error("Supabase review insert error:", err)
     }
