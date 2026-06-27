@@ -119,3 +119,7 @@ DROP POLICY IF EXISTS "Allow public insert on reviews" ON reviews;
 CREATE POLICY "Allow public insert on reviews"
   ON reviews FOR INSERT
   WITH CHECK (true);
+
+-- 7. Enable Realtime Replication
+alter publication supabase_realtime add table scans;
+alter publication supabase_realtime add table reviews;

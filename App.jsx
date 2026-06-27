@@ -552,6 +552,56 @@ export default function App() {
     };
 
     loadSupabaseData();
+
+    // Subscribe to real-time changes on the scans table
+    const scansChannel = supabase
+      .channel('scans-realtime-changes')
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'scans' },
+        (payload) => {
+          setDbScans(prev => {
+            if (prev.some(s => s.id === payload.new.id)) return prev;
+            const updated = [payload.new, ...prev];
+            localStorage.setItem(STORAGE.scans, JSON.stringify(updated));
+            return updated;
+          });
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'scans' },
+        (payload) => {
+          setDbScans(prev => {
+            const updated = prev.map(s => s.id === payload.new.id ? payload.new : s);
+            localStorage.setItem(STORAGE.scans, JSON.stringify(updated));
+            return updated;
+          });
+        }
+      )
+      .subscribe();
+
+    // Subscribe to real-time changes on the reviews table
+    const reviewsChannel = supabase
+      .channel('reviews-realtime-changes')
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'reviews' },
+        (payload) => {
+          setDbReviews(prev => {
+            if (prev.some(r => r.id === payload.new.id)) return prev;
+            const updated = [payload.new, ...prev];
+            localStorage.setItem(STORAGE.reviews, JSON.stringify(updated));
+            return updated;
+          });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(scansChannel);
+      supabase.removeChannel(reviewsChannel);
+    };
   }, []);
 
   // UPI Countdown Timer hook for simulated collect requests
