@@ -412,46 +412,12 @@ export default function App() {
     }
 
     if (!scans.some(s => s.businessId === 'b_dev')) {
-      const now = Date.now()
-      const seedScans = Array.from({ length: 114 }, (_, i) => ({
-        id: `sc_dev_${i}`,
-        businessId: 'b_dev',
-        time: now - Math.random() * 86400000 * 25,
-        converted: Math.random() > 0.45
-      }))
-      scans = [...scans, ...seedScans]
+      scans = [...scans, ...SEED_SCANS]
       needsSync = true
     }
 
     if (!reviews.some(r => r.businessId === 'b_dev')) {
-      const now = Date.now()
-      const seedReviews = [
-        {
-          id: 'rv_dev_1',
-          businessId: 'b_dev',
-          text: 'Easily the best catering in Delhi! Dev Caterers managed our corporate event in Dwarka perfectly. The delicious buffet was praised by all guests. Highly recommend their polite staff.',
-          rating: 5,
-          time: now - 86400000 * 5,
-          images: []
-        },
-        {
-          id: 'rv_dev_2',
-          businessId: 'b_dev',
-          text: 'Booked them for a wedding catering Dwarka function. Excellent food, top event food quality, and hygienic food prep. The layout was very professional.',
-          rating: 5,
-          time: now - 86400000 * 12,
-          images: []
-        },
-        {
-          id: 'rv_dev_3',
-          businessId: 'b_dev',
-          text: 'Decent buffet for our birthday party. Food was hot and fresh. Service was a bit slow initially, but overall very happy.',
-          rating: 4,
-          time: now - 86400000 * 18,
-          images: []
-        }
-      ]
-      reviews = [...reviews, ...seedReviews]
+      reviews = [...reviews, ...SEED_REVIEWS]
       needsSync = true
     }
 

@@ -209,12 +209,17 @@ export const SEED_BUSINESSES = [
 ]
 
 // Seed some initial analytics metrics
-export const SEED_SCANS = Array.from({ length: 114 }, (_, i) => ({
-  id: `sc_dev_${i}`,
-  businessId: 'b_dev',
-  time: now - Math.random() * day * 25,
-  converted: Math.random() > 0.45
-}))
+const baseTime = 1780760570426; // Stable June 2026 baseline
+export const SEED_SCANS = Array.from({ length: 114 }, (_, i) => {
+  const timeOffset = ((i * 12345) % 25) * day + ((i * 6789) % day);
+  const isConverted = (i * 7 + 3) % 10 < 6;
+  return {
+    id: `sc_dev_${i}`,
+    businessId: 'b_dev',
+    time: baseTime - timeOffset,
+    converted: isConverted
+  }
+})
 
 export const SEED_REVIEWS = [
   {
@@ -222,7 +227,7 @@ export const SEED_REVIEWS = [
     businessId: 'b_dev',
     text: 'Easily the best catering in Delhi! Dev Caterers managed our corporate event in Dwarka perfectly. The delicious buffet was praised by all guests. Highly recommend their polite staff.',
     rating: 5,
-    time: now - day * 5,
+    time: baseTime - day * 5,
     images: []
   },
   {
@@ -230,7 +235,7 @@ export const SEED_REVIEWS = [
     businessId: 'b_dev',
     text: 'Booked them for a wedding catering Dwarka function. Excellent food, top event food quality, and hygienic food prep. The layout was very professional.',
     rating: 5,
-    time: now - day * 12,
+    time: baseTime - day * 12,
     images: []
   },
   {
@@ -238,7 +243,7 @@ export const SEED_REVIEWS = [
     businessId: 'b_dev',
     text: 'Decent buffet for our birthday party. Food was hot and fresh. Service was a bit slow initially, but overall very happy.',
     rating: 4,
-    time: now - day * 18,
+    time: baseTime - day * 18,
     images: []
   }
 ]
